@@ -1,0 +1,4214 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#e6dfd0">
+  <title>🥗 Alimentació</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    :root {
+      --bg: #f5f0e6; --bg2: #ede7d9; --bg3: #e6dfd0;
+      --card: rgba(0,0,0,0.04); --border: rgba(0,0,0,0.09);
+      --accent: #c2440f; --blue: #2563eb; --yellow: #b45309;
+      --green: #15803d; --purple: #7c3aed; --red: #dc2626;
+      --text: #1c1408; --text2: rgba(28,20,8,0.6); --text3: rgba(28,20,8,0.38);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html, body { height:100%; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+      max-width: 480px; margin: 0 auto;
+      min-height: 100%; overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 14px 20px; background: var(--bg3);
+      position: sticky; top:0; z-index:100;
+      border-bottom: 1px solid var(--border);
+    }
+    .header-left { display:flex; align-items:center; gap:10px; }
+    .header-logo { font-size:26px; }
+    .header-title { font-size:17px; font-weight:700; }
+    .header-date { font-size:11px; color:var(--text3); margin-top:1px; }
+    .icon-btn {
+      background:none; border:none; color:var(--text2);
+      font-size:22px; cursor:pointer; padding:6px; border-radius:8px;
+    }
+    .icon-btn:active { background: var(--card); }
+
+    /* ── BOTTOM NAV ── */
+    .nav {
+      position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+      width:100%; max-width:480px;
+      background:var(--bg3); border-top:1px solid var(--border);
+      display:flex; z-index:100;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .nav-btn {
+      flex:1; display:flex; flex-direction:column;
+      align-items:center; gap:3px; padding:10px 0;
+      background:none; border:none; color:rgba(28,20,8,0.45);
+      font-size:10px; font-weight:600; cursor:pointer; transition:color .15s;
+    }
+    .nav-btn .nav-icon { font-size:22px; line-height:1; }
+    .nav-btn.active { color:var(--accent); }
+
+    /* ── PAGES ── */
+    .page {
+      display:none; padding:16px 20px;
+      padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+      min-height: calc(100vh - 60px);
+    }
+    .page.active { display:block; }
+
+    /* ── CARDS ── */
+    .card {
+      background:var(--card); border:1px solid var(--border);
+      border-radius:16px; padding:18px; margin-bottom:12px;
+    }
+    .card-title {
+      font-size:11px; color:var(--text3); text-transform:uppercase;
+      letter-spacing:1.5px; margin-bottom:14px;
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:8px; width:100%; padding:13px 20px; border-radius:12px;
+      border:none; font-size:15px; font-weight:600; cursor:pointer;
+      transition:opacity .15s; font-family:inherit;
+    }
+    .btn:active { opacity:.75; }
+    .btn-primary { background:var(--accent); color:#fff; }
+    .btn-secondary { background:rgba(249,115,22,.15); border:1px solid rgba(249,115,22,.3); color:var(--accent); }
+    .btn-ghost { background:var(--card); border:1px solid var(--border); color:var(--text2); }
+    .btn-sm { padding:8px 14px; font-size:13px; border-radius:9px; width:auto; }
+
+    /* ── FORM ── */
+    label.lbl { display:block; font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:7px; }
+    input, textarea, select {
+      width:100%; background:var(--card); border:1px solid var(--border);
+      border-radius:10px; color:var(--text); font-size:15px;
+      padding:11px 13px; outline:none; font-family:inherit;
+      transition:border-color .2s;
+    }
+    input:focus, textarea:focus, select:focus { border-color:var(--accent); }
+    select option { background:#ede7d9; }
+    textarea { resize:none; min-height:90px; line-height:1.5; }
+    input[type="number"] { -moz-appearance:textfield; }
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance:none; }
+    .form-group { margin-bottom:14px; }
+    .hint { font-size:12px; color:var(--text3); margin-top:5px; line-height:1.5; }
+
+    /* ── MEAL SELECTOR ── */
+    .meal-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px; }
+    .meal-chip {
+      padding:10px 4px; border-radius:10px; border:1px solid var(--border);
+      background:var(--card); color:var(--text3); font-size:10px; font-weight:600;
+      text-align:center; cursor:pointer; transition:all .15s; font-family:inherit;
+    }
+    .meal-chip .mi { font-size:20px; display:block; margin-bottom:3px; }
+    .meal-chip.active { border-color:var(--accent); color:var(--accent); background:rgba(249,115,22,.1); }
+
+    /* ── SCANNER ── */
+    #scan-box {
+      width:100%; aspect-ratio:1; border-radius:16px; overflow:hidden;
+      background:#000; position:relative; margin-bottom:14px;
+    }
+    #reader { width:100% !important; border:none !important; }
+    #reader video { width:100% !important; object-fit:cover; }
+    #reader img, #reader * > img { display:none !important; }
+    .scan-overlay {
+      position:absolute; inset:0; display:flex;
+      align-items:center; justify-content:center; pointer-events:none;
+    }
+    .scan-frame {
+      width:58%; height:58%;
+      border:2px solid var(--accent); border-radius:14px;
+      box-shadow:0 0 0 2000px rgba(0,0,0,.4);
+    }
+    .scan-line {
+      position:absolute; left:21%; right:21%;
+      height:2px; background:var(--accent); opacity:.7;
+      animation: scanline 2s ease-in-out infinite;
+    }
+    @keyframes scanline {
+      0%,100% { top:21%; } 50% { top:79%; }
+    }
+
+    /* ── PRODUCT RESULT ── */
+    .product-name { font-size:17px; font-weight:700; margin-bottom:3px; line-height:1.3; }
+    .product-brand { font-size:12px; color:var(--text3); margin-bottom:14px; }
+    .macros-grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:12px; }
+    .m4cell { background:rgba(255,255,255,.04); border-radius:10px; padding:10px 4px; text-align:center; }
+    .m4cell-val { font-size:16px; font-weight:700; }
+    .m4cell-lbl { font-size:10px; color:var(--text3); margin-top:2px; }
+
+    /* ── QTY ROW ── */
+    .qty-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+    .qty-row input { flex:1; text-align:center; font-size:22px; font-weight:700; }
+    .qty-arrow {
+      width:44px; height:44px; background:var(--card); border:1px solid var(--border);
+      border-radius:10px; color:var(--text); font-size:24px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+      font-family:inherit;
+    }
+    .qty-unit { font-size:13px; color:var(--text3); flex-shrink:0; }
+    .qty-total { text-align:center; font-size:13px; color:var(--text2); margin-bottom:14px; }
+
+    /* ── MACROS BARS ── */
+    .mbar { display:flex; flex-direction:column; gap:5px; margin-bottom:13px; }
+    .mbar-header { display:flex; justify-content:space-between; align-items:center; }
+    .mbar-name { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text2); }
+    .mdot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .mbar-val { font-size:13px; color:var(--text); }
+    .mbar-val b { font-size:17px; font-weight:700; }
+    .mbar-val .obj { color:var(--text3); font-size:11px; }
+    .bar-bg { height:5px; background:rgba(255,255,255,.07); border-radius:3px; overflow:hidden; }
+    .bar-fill { height:100%; border-radius:3px; transition:width .9s ease; }
+
+    /* ── KCAL RING ── */
+    .ring-wrap { position:relative; width:160px; height:160px; margin:0 auto 14px; }
+    .ring-wrap svg { transform:rotate(-90deg); }
+    .r-bg { fill:none; stroke:#c9b99a; stroke-width:14; stroke-opacity:.35; }
+    .r-prog { fill:none; stroke:var(--accent); stroke-width:10; stroke-linecap:round; stroke-dasharray:408; transition:stroke-dashoffset .9s ease; }
+    .ring-center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; width:110px; }
+    .ring-num { font-size:34px; font-weight:800; line-height:1; }
+    .ring-lbl { font-size:10px; color:var(--text3); margin-top:2px; letter-spacing:1px; }
+    .ring-net { font-size:11px; color:var(--text2); margin-top:5px; font-weight:600; }
+    .restant-num { font-size:24px; font-weight:800; line-height:1; margin-top:10px; }
+    .restant-lbl { font-size:10px; color:var(--text3); letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
+
+    /* ── INTERPRETED ITEMS ── */
+    .item-row {
+      display:flex; align-items:center; padding:11px 0;
+      border-bottom:1px solid var(--border);
+    }
+    .item-row:last-child { border-bottom:none; }
+    .item-check { font-size:16px; margin-right:10px; }
+    .item-info { flex:1; }
+    .item-name { font-size:14px; font-weight:600; }
+    .item-macros { font-size:11px; color:var(--text3); margin-top:2px; }
+    .item-del { color:var(--red); font-size:18px; cursor:pointer; padding:4px 6px; }
+
+    /* ── SECTION CARD HEADERS ── */
+    .card-sh { padding: 0; overflow: hidden; }
+    .card-sh .card-body { padding: 14px 16px; }
+    .sh {
+      display: flex; align-items: center; gap: 10px;
+      padding: 13px 16px;
+    }
+    .sh-icon { font-size: 20px; line-height: 1; }
+    .sh-title { font-size: 16px; font-weight: 800; }
+
+    /* ── MEAL GROUPS (today) ── */
+    .mg {
+      margin-bottom: 10px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .mg-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 16px; cursor: pointer;
+      user-select: none; -webkit-user-select: none;
+    }
+    .mg-header-left { display: flex; align-items: center; gap: 10px; }
+    .mg-meal-icon { font-size: 20px; line-height: 1; }
+    .mg-meal-name { font-size: 16px; font-weight: 800; }
+    .mg-meal-kcal { font-size: 13px; font-weight: 600; opacity: 0.8; margin-left: 2px; }
+    .mg-chevron { font-size: 11px; color: var(--text3); transition: transform .25s; }
+    .mg.open > .mg-header .mg-chevron { transform: rotate(180deg); }
+    .mg-body { display: none; border-top: 1.5px solid var(--border); padding: 4px 14px 10px; }
+    .mg.open > .mg-body { display: block; }
+    .entry-row {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:9px 0; border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .entry-row:last-child { border-bottom:none; }
+    .entry-name { font-size:14px; font-weight:700; color:var(--text); }
+    .entry-sub { font-size:11px; color:var(--text3); margin-top:1px; }
+    .entry-kcal { font-size:13px; font-weight:600; color:var(--accent); }
+
+    /* ── EMPTY STATE ── */
+    .empty { text-align:center; padding:40px 20px; color:var(--text3); }
+    .empty-icon { font-size:44px; margin-bottom:10px; }
+    .empty-txt { font-size:14px; }
+
+    /* ── MODAL ── */
+    .modal-bg {
+      position:fixed; inset:0; background:rgba(0,0,0,.7);
+      z-index:200; display:none; align-items:flex-end;
+    }
+    .modal-bg.open { display:flex; }
+    .modal {
+      background:var(--bg2); border-radius:22px 22px 0 0;
+      padding:20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+      width:100%; max-height:92vh; overflow-y:auto;
+    }
+    .modal-handle { width:38px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 18px; }
+    .modal-title { font-size:17px; font-weight:700; margin-bottom:18px; }
+    .divider { height:1px; background:var(--border); margin:16px 0; }
+    .mbar { cursor:pointer; border-radius:8px; padding:4px 4px 6px; margin:-4px -4px 2px; transition:background .15s; }
+    .mbar:hover { background:var(--border); }
+    .macro-row { display:flex; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); gap:10px; }
+    .macro-row:last-child { border-bottom:none; }
+    .macro-row-name { flex:1; font-size:14px; font-weight:500; }
+    .macro-row-meal { font-size:11px; color:var(--text3); margin-top:2px; }
+    .macro-row-val { font-size:15px; font-weight:700; min-width:48px; text-align:right; }
+    .macro-row-kcal { font-size:11px; color:var(--text3); min-width:52px; text-align:right; }
+    .macro-row-link { font-size:18px; padding:0 2px; color:var(--text3); text-decoration:none; flex-shrink:0; }
+    .macro-row-link:hover { color:var(--accent); }
+    .porcio-chip { padding:7px 16px; border-radius:20px; border:2px solid var(--border); background:var(--bg2); font-size:15px; font-weight:700; cursor:pointer; transition:all .15s; }
+    .porcio-chip.porcio-active { border-color:var(--accent); color:var(--accent); background:var(--bg); }
+
+    /* ── TOAST ── */
+    .toast {
+      position:fixed; bottom:calc(76px + env(safe-area-inset-bottom,0px));
+      left:50%; transform:translateX(-50%);
+      background:#2d2010; color:#fff; padding:11px 18px;
+      border-radius:12px; font-size:13px; z-index:500;
+      opacity:0; transition:opacity .25s; pointer-events:none;
+      max-width:90%; text-align:center; line-height:1.4;
+    }
+    .toast.show { opacity:1; }
+    .toast.ok { background:#14532d; }
+    .toast.err { background:#7f1d1d; color:#fff; }
+
+    /* ── SPINNER ── */
+    .spin {
+      display:inline-block; width:16px; height:16px;
+      border:2px solid rgba(255,255,255,.3); border-top-color:#fff;
+      border-radius:50%; animation:rot .6s linear infinite; vertical-align:middle;
+    }
+    @keyframes rot { to { transform:rotate(360deg); } }
+
+    /* ── DEFICIT BADGE ── */
+    .deficit-badge {
+      display:inline-block; background:var(--card);
+      border:1px solid var(--border); border-radius:20px;
+      padding:5px 16px; font-size:13px; color:var(--text); font-weight:700;
+    }
+    .consumed-info {
+      font-size:12px; color:var(--text2); margin-top:6px;
+    }
+
+    a { color:var(--accent); }
+    code { font-size:11px; }
+    .section-gap { height:16px; }
+
+    /* ── PLATS ── */
+    .plat-tab { padding:7px 14px; border-radius:20px; border:2px solid var(--border); background:var(--bg2); font-size:13px; font-weight:600; cursor:pointer; color:var(--text2); transition:all .15s; }
+    .plat-tab.active { border-color:var(--accent); color:var(--accent); background:var(--bg); }
+    .plat-card {
+      background:var(--card); border:1px solid var(--border); border-radius:14px;
+      padding:14px 16px; margin-bottom:10px; cursor:pointer; transition:border-color .15s;
+    }
+    .plat-card:active { border-color:var(--accent); }
+    .plat-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+    .plat-nom { font-size:15px; font-weight:700; }
+    .plat-apat { font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; white-space:nowrap; }
+    .plat-ing { font-size:12px; color:var(--text3); margin-top:6px; line-height:1.5;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .plat-actions { display:flex; gap:8px; margin-top:10px; }
+    .plat-form { background:var(--card); border:1px solid var(--accent); border-radius:14px; padding:16px; margin-bottom:12px; }
+
+    /* ── EXERCICI ── */
+    .ex-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+    .ex-chip {
+      padding:7px 12px; border-radius:20px; border:1px solid var(--border);
+      background:var(--card); color:var(--text2); font-size:12px; font-weight:600;
+      cursor:pointer; font-family:inherit; transition:all .15s;
+    }
+    .ex-chip.active { border-color:var(--accent); color:var(--accent); background:rgba(194,68,15,.1); }
+    .ex-input-row { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
+    .ex-input-row input { text-align:center; }
+    .ex-entry {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:8px 0; border-bottom:1px solid rgba(0,0,0,.06); font-size:13px;
+    }
+    .ex-entry:last-child { border-bottom:none; }
+    .ex-del { color:var(--red); font-size:16px; cursor:pointer; padding:2px 6px; }
+    .ex-total {
+      display:flex; justify-content:space-between; align-items:center;
+      padding-top:10px; border-top:1px solid var(--border); margin-top:6px;
+      font-size:13px; font-weight:700;
+    }
+    .ex-obj-banner {
+      display:flex; align-items:center; justify-content:center; gap:6px;
+      background:rgba(194,68,15,.08); border:1px solid rgba(194,68,15,.2);
+      border-radius:10px; padding:8px 12px; margin-top:10px; font-size:13px;
+    }
+
+    /* ── WEEK VIEW ── */
+    .week-stat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:12px; }
+    .wstat { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 8px; text-align:center; }
+    .wstat-val { font-size:20px; font-weight:800; line-height:1; }
+    .wstat-lbl { font-size:10px; color:var(--text3); margin-top:4px; text-transform:uppercase; letter-spacing:.8px; }
+    .week-chart { display:flex; align-items:flex-end; gap:5px; height:110px; margin:14px 0 6px; }
+    .wbar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; }
+    .wbar-outer { flex:1; width:100%; display:flex; align-items:flex-end; }
+    .wbar { width:100%; border-radius:5px 5px 0 0; min-height:3px; transition:height .6s ease; position:relative; }
+    .wbar.today-bar { box-shadow:0 0 8px rgba(249,115,22,.5); }
+    .wbar.over { background:var(--red) !important; }
+    .wbar-day { font-size:10px; color:var(--text3); }
+    .wbar-kcal { font-size:10px; color:var(--text2); font-weight:600; }
+    .week-obj-line { display:flex; justify-content:flex-end; align-items:center; gap:5px; margin-bottom:14px; }
+    .week-obj-dot { width:10px; height:3px; background:rgba(255,255,255,.3); border-radius:2px; }
+    .week-obj-txt { font-size:11px; color:var(--text3); }
+    .week-day-list { margin-top:4px; }
+    .wday-row {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:10px 0; border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .wday-row:last-child { border-bottom:none; }
+    .wday-left { display:flex; align-items:center; gap:10px; }
+    .wday-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .wday-name { font-size:13px; font-weight:500; }
+    .wday-name.today-label { color:var(--accent); font-weight:700; }
+    .wday-right { text-align:right; }
+    .wday-kcal { font-size:13px; font-weight:700; }
+    .wday-pct { font-size:11px; color:var(--text3); margin-top:1px; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <span class="header-logo">🥗</span>
+    <div>
+      <div class="header-title">Alimentació <span style="font-size:9px;opacity:0.5">v21q</span></div>
+      <div class="header-date" id="h-date"></div>
+    </div>
+  </div>
+  <button class="icon-btn" onclick="openSettings()" title="Configuració">⚙️</button>
+</header>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: SCAN
+══════════════════════════════════════════════════════════ -->
+<div id="page-scan" class="page active">
+
+  <div id="scan-box">
+    <div id="reader"></div>
+    <div class="scan-overlay">
+      <div style="position:relative;width:58%;height:58%;">
+        <div class="scan-frame"></div>
+        <div class="scan-line"></div>
+      </div>
+    </div>
+  </div>
+
+  <p id="scan-status" class="hint" style="text-align:center;margin-bottom:8px">
+    Apunta la càmera al codi de barres del producte
+  </p>
+  <div style="text-align:center;margin-bottom:12px">
+    <button id="btn-torch" onclick="toggleTorch()" style="background:none;border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:13px;color:var(--text2);cursor:pointer">🔦 Llanterna</button>
+  </div>
+
+  <!-- Product found -->
+  <div id="product-result" style="display:none">
+    <div class="card">
+      <input type="text" id="p-name" style="font-size:17px;font-weight:700;background:none;border:none;border-bottom:1px dashed var(--border);width:100%;color:var(--text);padding:0 0 5px;margin-bottom:3px;font-family:inherit" placeholder="Nom del producte">
+      <div class="product-brand" id="p-brand">—</div>
+      <div class="hint" style="margin-bottom:10px;font-size:11px">✏️ Edita el nom per coincidir amb un aliment existent al catàleg</div>
+      <div class="macros-grid-4">
+        <div class="m4cell">
+          <div class="m4cell-val" id="p-kcal">—</div>
+          <div class="m4cell-lbl">kcal</div>
+        </div>
+        <div class="m4cell">
+          <div class="m4cell-val" style="color:var(--blue)" id="p-prot">—</div>
+          <div class="m4cell-lbl">prot g</div>
+        </div>
+        <div class="m4cell">
+          <div class="m4cell-val" style="color:var(--yellow)" id="p-greix">—</div>
+          <div class="m4cell-lbl">greix g</div>
+        </div>
+        <div class="m4cell">
+          <div class="m4cell-val" style="color:var(--green)" id="p-carbs">—</div>
+          <div class="m4cell-lbl">carbs g</div>
+        </div>
+      </div>
+      <p class="hint" style="margin-bottom:12px" id="p-per100">Valors per 100g</p>
+
+      <label class="lbl">Quantitat</label>
+      <div class="qty-row">
+        <button class="qty-arrow" onclick="adjQty(-10)">−</button>
+        <input type="number" id="qty" value="100" min="1" max="2000" oninput="calcQty()">
+        <button class="qty-arrow" onclick="adjQty(10)">+</button>
+        <span class="qty-unit" id="qty-unit">g</span>
+      </div>
+      <div class="qty-total" id="qty-total">→ — kcal</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <button class="btn btn-primary" id="btn-save-scan" onclick="saveScan()">➕ Afegir a àpat</button>
+      <button class="btn" style="background:var(--bg2);border:2px solid var(--border);color:var(--text)" id="btn-catalog-scan" onclick="catalogScan()">📚 Catalogar</button>
+    </div>
+
+    <div id="scan-meal-section">
+      <label class="lbl">Àpat</label>
+      <div class="meal-grid" id="mg-scan">
+        <button class="meal-chip active" data-m="Esmorzar" onclick="selMeal(this,'scan')"><span class="mi">☀️</span>Esmorzar</button>
+        <button class="meal-chip" data-m="Dinar" onclick="selMeal(this,'scan')"><span class="mi">🍽️</span>Dinar</button>
+        <button class="meal-chip" data-m="Berenar" onclick="selMeal(this,'scan')"><span class="mi">🍎</span>Berenar</button>
+        <button class="meal-chip" data-m="Sopar" onclick="selMeal(this,'scan')"><span class="mi">🌙</span>Sopar</button>
+      </div>
+    </div>
+
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="resetScan()">🔄 Escanejar un altre</button>
+  </div>
+
+</div><!-- /page-scan -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: TEXT (natural language)
+══════════════════════════════════════════════════════════ -->
+<div id="page-text" class="page">
+
+  <p class="hint" style="margin-bottom:14px">
+    Descriu el que has menjat en català o castellà. Claude calcularà les macros automàticament.
+  </p>
+
+  <label class="lbl">Àpat</label>
+  <div class="meal-grid" id="mg-text">
+    <button class="meal-chip active" data-m="Esmorzar" onclick="selMeal(this,'text')"><span class="mi">☀️</span>Esmorzar</button>
+    <button class="meal-chip" data-m="Dinar" onclick="selMeal(this,'text')"><span class="mi">🍽️</span>Dinar</button>
+    <button class="meal-chip" data-m="Berenar" onclick="selMeal(this,'text')"><span class="mi">🍎</span>Berenar</button>
+    <button class="meal-chip" data-m="Sopar" onclick="selMeal(this,'text')"><span class="mi">🌙</span>Sopar</button>
+  </div>
+
+  <div class="form-group">
+    <label class="lbl">Que has menjat?</label>
+    <textarea id="nl-input" placeholder="Ex: He menjat dos ous remenats, una torrada de pa integral amb tomàquet i un cafè amb llet sencera..." rows="5"></textarea>
+    <div class="hint">Pots incloure quantitats, marques o descripcions generals.</div>
+  </div>
+
+  <button class="btn btn-primary" id="btn-interpret" onclick="interpretText()">
+    🧠 Analitzar amb Claude
+  </button>
+  <button class="btn btn-ghost" id="btn-catalogar-prod" onclick="identificarProducte()" style="margin-top:8px">
+    📚 Identificar i catalogar producte
+  </button>
+
+  <!-- Resultats identificació producte -->
+  <div id="cat-prod-results" style="display:none;margin-top:18px">
+    <div class="card-title" style="margin-bottom:8px">🔍 Variants trobades — tria la correcta</div>
+    <div id="cat-prod-list"></div>
+    <div class="form-group" style="margin-top:12px">
+      <label class="lbl">Codi de barres (opcional)</label>
+      <input type="text" id="cat-prod-barcode" placeholder="Ex: 8410188010024" inputmode="numeric">
+      <div class="hint">Si has escanejat el producte abans, s'ha pre-omplert automàticament.</div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:4px" onclick="guardarProducteSeleccionat()">📚 Afegir al catàleg</button>
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="document.getElementById('cat-prod-results').style.display='none'">Cancel·lar</button>
+  </div>
+
+  <!-- Interpreted results -->
+  <div id="interp-results" style="display:none;margin-top:18px">
+    <div class="card-title" style="margin-bottom:8px">✅ Elements detectats — revisa i confirma</div>
+    <div class="card" id="items-list"></div>
+    <button class="btn btn-primary" style="margin-top:8px" onclick="saveText()">➕ Afegir tot a Notion</button>
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="clearText()">🗑️ Descartar</button>
+  </div>
+
+</div><!-- /page-text -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: TODAY
+══════════════════════════════════════════════════════════ -->
+<div id="page-today" class="page">
+
+  <!-- Kcal ring -->
+  <div class="card" style="text-align:center">
+    <div class="hint" id="today-date-lbl" style="margin-bottom:14px;text-transform:uppercase;letter-spacing:2px"></div>
+    <div class="ring-wrap">
+      <svg width="160" height="160" viewBox="0 0 160 160">
+        <!-- Fons cru = total objectiu complet -->
+        <circle class="r-bg" cx="80" cy="80" r="68"/>
+        <!-- Exercici (verd) -->
+        <circle class="r-prog" id="ex-ring" cx="80" cy="80" r="68"
+          style="stroke:var(--green);stroke-dasharray:0 408;stroke-dashoffset:0;transition:stroke-dasharray .9s ease,stroke-dashoffset .9s ease"/>
+        <!-- Consumit (taronja) -->
+        <circle class="r-prog" id="kcal-ring" cx="80" cy="80" r="68"
+          style="stroke-dasharray:0 408;stroke-dashoffset:0"/>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-num" id="t-kcal">—</div>
+        <div class="ring-lbl">CONSUMIT</div>
+        <div class="ring-net" id="t-net-kcal"></div>
+      </div>
+    </div>
+    <!-- Llegenda -->
+    <div style="display:flex;justify-content:center;gap:16px;margin-bottom:12px;font-size:11px;color:var(--text2)">
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);margin-right:4px;vertical-align:middle"></span>Consumit</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green);margin-right:4px;vertical-align:middle"></span>Exercici</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#c9b99a;margin-right:4px;vertical-align:middle;opacity:.6"></span>Objectiu</span>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:10px">
+      Suma objectiu: <span id="t-kcal-obj" style="color:var(--accent);font-weight:600">—</span>
+      <span id="t-kcal-obj-ex" style="color:var(--green);font-weight:600"></span>
+    </div>
+    <span class="deficit-badge" id="t-deficit">—</span>
+    <div class="restant-num" id="t-restant-num">—</div>
+    <div class="restant-lbl">kcal disponibles avui</div>
+    <div class="consumed-info" id="t-consumed-info"></div>
+
+    <!-- Pes -->
+    <div style="display:flex;justify-content:center;gap:28px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+      <div style="text-align:center">
+        <div style="font-size:22px;font-weight:800;line-height:1" id="t-pes-real">—</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">⚖️ Pes real</div>
+      </div>
+      <div style="width:1px;background:var(--border)"></div>
+      <div style="text-align:center">
+        <div style="font-size:22px;font-weight:800;line-height:1;color:var(--green)" id="t-pes-obj">—</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">🎯 Objectiu</div>
+      </div>
+      <div style="width:1px;background:var(--border)"></div>
+      <div style="text-align:center">
+        <div style="font-size:22px;font-weight:800;line-height:1;color:var(--accent)" id="t-pes-diff">—</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">📉 Per perdre</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Àpats -->
+  <div id="today-entries">
+    <div class="empty"><div class="empty-icon">🍽️</div><div class="empty-txt">Prem "Actualitzar" per carregar els àpats d'avui</div></div>
+  </div>
+
+  <!-- Macros -->
+  <div class="card card-sh" style="border-color:rgba(124,58,237,.22)">
+    <div class="sh" style="background:#f5f3ff;border-bottom:1.5px solid rgba(124,58,237,.2)">
+      <span class="sh-icon">📊</span>
+      <span class="sh-title" style="color:#4c1d95">Macronutrients</span>
+    </div>
+    <div class="card-body">
+      <div class="mbar" onclick="showMacroModal('prot')">
+        <div class="mbar-header">
+          <div class="mbar-name"><div class="mdot" style="background:var(--blue)"></div>Proteïna</div>
+          <div class="mbar-val"><b id="t-prot">—</b>g <span class="obj" id="t-prot-obj"></span></div>
+        </div>
+        <div class="bar-bg"><div class="bar-fill" id="bar-prot" style="background:var(--blue);width:0%"></div></div>
+      </div>
+      <div class="mbar" onclick="showMacroModal('greix')">
+        <div class="mbar-header">
+          <div class="mbar-name"><div class="mdot" style="background:var(--yellow)"></div>Greix</div>
+          <div class="mbar-val"><b id="t-greix">—</b>g <span class="obj" id="t-greix-obj"></span></div>
+        </div>
+        <div class="bar-bg"><div class="bar-fill" id="bar-greix" style="background:var(--yellow);width:0%"></div></div>
+      </div>
+      <div class="mbar" onclick="showMacroModal('carbs')">
+        <div class="mbar-header">
+          <div class="mbar-name"><div class="mdot" style="background:var(--green)"></div>Carbohidrats</div>
+          <div class="mbar-val"><b id="t-carbs">—</b>g <span class="obj" id="t-carbs-obj"></span></div>
+        </div>
+        <div class="bar-bg"><div class="bar-fill" id="bar-carbs" style="background:var(--green);width:0%"></div></div>
+      </div>
+      <div class="mbar" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px" onclick="showMacroModal('fibra')">
+        <div class="mbar-header">
+          <div class="mbar-name"><div class="mdot" style="background:var(--purple)"></div>Fibra</div>
+          <div class="mbar-val"><b id="t-fibra">—</b>g <span class="obj" id="t-fibra-obj"></span></div>
+        </div>
+        <div class="bar-bg"><div class="bar-fill" id="bar-fibra" style="background:var(--purple);width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exercici -->
+  <div class="card card-sh" style="border-color:rgba(34,197,94,.25)">
+    <div class="sh" style="background:#dcfce7;border-bottom:1.5px solid rgba(34,197,94,.25)">
+      <span class="sh-icon">🏃</span>
+      <span class="sh-title" style="color:#14532d">Exercici d'avui</span>
+    </div>
+    <div class="card-body">
+      <div class="ex-chips" id="ex-chips">
+        <button class="ex-chip active" data-act="Caminar"  data-met="3.5" onclick="selEx(this)">🚶 Caminar</button>
+        <button class="ex-chip"        data-act="Córrer"   data-met="8.0" onclick="selEx(this)">🏃 Córrer</button>
+        <button class="ex-chip"        data-act="Bici"     data-met="6.0" onclick="selEx(this)">🚴 Bici</button>
+        <button class="ex-chip"        data-act="Aquagym"  data-met="3.0" onclick="selEx(this)">🌊 Aquagym</button>
+        <button class="ex-chip"        data-act="Passos"   data-met="0"   onclick="selEx(this)">👟 Passos</button>
+        <button class="ex-chip"        data-act="Altre"    data-met="0"   onclick="selEx(this)">➕ Altre</button>
+      </div>
+
+      <!-- Input estàndard (Caminar, Córrer, Bici...) -->
+      <div id="ex-input-std">
+        <div class="ex-input-row">
+          <div id="ex-min-wrap" style="flex:1.2">
+            <input type="number" id="ex-min" placeholder="Minuts" min="1" max="300" oninput="calcExKcal()">
+          </div>
+          <div id="ex-km-wrap" style="flex:1">
+            <input type="number" id="ex-km" placeholder="km" min="0.1" step="0.1" oninput="calcExKcal()">
+          </div>
+          <div style="color:var(--text3);font-size:18px;font-weight:300">=</div>
+          <div style="flex:1">
+            <input type="number" id="ex-kcal-in" placeholder="kcal" min="1">
+          </div>
+          <button class="btn btn-primary" style="width:auto;padding:11px 16px" onclick="addExercici()">＋</button>
+        </div>
+      </div>
+
+      <!-- Input passos (només visible quan selecciones Passos) -->
+      <div id="ex-input-passos" style="display:none">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:8px">
+          Només comptem els passos per sobre de 5.000 (activitat de fons ja inclosa a l'objectiu base)
+        </div>
+        <div class="ex-input-row">
+          <div style="flex:2">
+            <input type="number" id="ex-passos" placeholder="Total passos avui" min="1" step="100" oninput="calcPassos()">
+          </div>
+          <div style="color:var(--text3);font-size:18px;font-weight:300">=</div>
+          <div style="flex:1">
+            <input type="number" id="ex-passos-kcal" placeholder="kcal" min="1" readonly style="background:var(--bg2)">
+          </div>
+          <button class="btn btn-primary" style="width:auto;padding:11px 16px" onclick="addPassos()">＋</button>
+        </div>
+        <div id="ex-passos-detail" style="font-size:11px;color:var(--text3);margin-top:4px;min-height:16px"></div>
+      </div>
+
+      <div id="ex-list"></div>
+
+      <div class="ex-total" id="ex-total" style="display:none">
+        <span style="color:var(--text2)">Total cremat</span>
+        <span style="color:var(--accent)" id="ex-total-val">0 kcal</span>
+      </div>
+      <div class="ex-obj-banner" id="ex-obj-banner" style="display:none">
+        <span>🎯 Nou objectiu:</span>
+        <span style="font-weight:800;color:var(--accent)" id="ex-obj-nou">—</span>
+        <span style="color:var(--text3);font-size:11px" id="ex-obj-detail"></span>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn btn-ghost" onclick="loadToday()">🔄 Actualitzar dades</button>
+
+</div><!-- /page-today -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: SETMANA
+══════════════════════════════════════════════════════════ -->
+<div id="page-setmana" class="page">
+
+  <!-- Stats summary -->
+  <div class="week-stat-grid" id="w-stats">
+    <div class="wstat">
+      <div class="wstat-val" id="w-avg">—</div>
+      <div class="wstat-lbl">Mitja kcal 🍽️</div>
+      <div style="font-size:13px;font-weight:700;color:var(--blue);margin-top:5px;line-height:1" id="w-avg-ex">—</div>
+      <div class="wstat-lbl">Mitja exercici 🏃</div>
+    </div>
+    <div class="wstat"><div class="wstat-val" id="w-ok">—</div><div class="wstat-lbl">Dies OK</div></div>
+    <div class="wstat"><div class="wstat-val" id="w-streak">—</div><div class="wstat-lbl">Ratxa</div></div>
+    <div class="wstat">
+      <div class="wstat-val" id="w-vel">—</div>
+      <div class="wstat-lbl">Velocitat pèrdua</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px" id="w-vel-lbl"></div>
+    </div>
+  </div>
+
+  <!-- Bar chart -->
+  <div class="card">
+    <div class="card-title">Kcal els últims 7 dies</div>
+    <div class="week-chart" id="w-chart">
+      <div class="empty" style="width:100%;padding:20px 0"><div class="empty-icon">⏳</div></div>
+    </div>
+    <div class="week-obj-line">
+      <div class="week-obj-dot"></div>
+      <div class="week-obj-txt">Objectiu: <span id="w-obj-val">—</span> kcal</div>
+    </div>
+  </div>
+
+  <!-- Day list -->
+  <div class="card">
+    <div class="card-title">Detall per dia</div>
+    <div class="week-day-list" id="w-daylist">
+      <div class="empty" style="padding:16px 0"><div class="empty-txt">Carregant…</div></div>
+    </div>
+  </div>
+
+  <button class="btn btn-ghost" onclick="loadSetmana()">🔄 Actualitzar</button>
+
+</div><!-- /page-setmana -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: CERCA
+══════════════════════════════════════════════════════════ -->
+<div id="page-cerca" class="page">
+
+  <!-- Filters -->
+  <div class="card">
+    <div class="card-title">Selecciona data i àpat</div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="lbl">Data</label>
+      <input type="date" id="c-date">
+    </div>
+    <div class="meal-grid" id="mg-cerca">
+      <button class="meal-chip active" data-m="Tots" onclick="selMeal(this,'cerca')">
+        <span class="mi">📋</span>Tots
+      </button>
+      <button class="meal-chip" data-m="Esmorzar" onclick="selMeal(this,'cerca')">
+        <span class="mi">☀️</span>Esmorzar
+      </button>
+      <button class="meal-chip" data-m="Dinar" onclick="selMeal(this,'cerca')">
+        <span class="mi">🍽️</span>Dinar
+      </button>
+      <button class="meal-chip" data-m="Berenar" onclick="selMeal(this,'cerca')">
+        <span class="mi">🍎</span>Berenar
+      </button>
+      <button class="meal-chip" data-m="Sopar" onclick="selMeal(this,'cerca')">
+        <span class="mi">🌙</span>Sopar
+      </button>
+    </div>
+    <button class="btn btn-primary" onclick="loadCerca()">🔍 Carregar</button>
+  </div>
+
+  <!-- Ring -->
+  <div class="card" id="c-ring-card" style="display:none;text-align:center">
+    <div class="hint" id="c-date-lbl" style="margin-bottom:14px;text-transform:uppercase;letter-spacing:2px"></div>
+    <div class="ring-wrap">
+      <svg width="160" height="160" viewBox="0 0 160 160">
+        <circle class="r-bg" cx="80" cy="80" r="68"/>
+        <circle class="r-prog" id="c-ex-ring" cx="80" cy="80" r="68"
+          style="stroke:var(--green);stroke-dasharray:0 408;stroke-dashoffset:0;transition:stroke-dasharray .9s ease,stroke-dashoffset .9s ease"/>
+        <circle class="r-prog" id="c-kcal-ring" cx="80" cy="80" r="68"
+          style="stroke-dasharray:0 408;stroke-dashoffset:0"/>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-num" id="c-kcal">—</div>
+        <div class="ring-lbl">CONSUMIT</div>
+        <div class="ring-net" id="c-net-kcal"></div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:center;gap:16px;margin-bottom:12px;font-size:11px;color:var(--text2)">
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);margin-right:4px;vertical-align:middle"></span>Consumit</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green);margin-right:4px;vertical-align:middle"></span>Exercici</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#c9b99a;margin-right:4px;vertical-align:middle;opacity:.6"></span>Objectiu</span>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:10px">
+      Suma objectiu: <span id="c-kcal-obj" style="color:var(--accent);font-weight:600">—</span>
+      <span id="c-kcal-obj-ex" style="color:var(--green);font-weight:600"></span>
+    </div>
+    <span class="deficit-badge" id="c-deficit">—</span>
+    <div class="restant-num" id="c-restant-num">—</div>
+    <div class="restant-lbl">kcal diferència</div>
+    <div class="consumed-info" id="c-consumed-info"></div>
+  </div>
+
+  <!-- Macros -->
+  <div class="card" id="c-macros-card" style="display:none">
+    <div class="card-title">Macronutrients</div>
+    <div class="mbar" onclick="showMacroModal('prot')">
+      <div class="mbar-header">
+        <div class="mbar-name"><div class="mdot" style="background:var(--blue)"></div>Proteïna</div>
+        <div class="mbar-val"><b id="c-prot">—</b>g <span class="obj" id="c-prot-obj"></span></div>
+      </div>
+      <div class="bar-bg"><div class="bar-fill" id="c-bar-prot" style="background:var(--blue);width:0%"></div></div>
+    </div>
+    <div class="mbar" onclick="showMacroModal('greix')">
+      <div class="mbar-header">
+        <div class="mbar-name"><div class="mdot" style="background:var(--yellow)"></div>Greix</div>
+        <div class="mbar-val"><b id="c-greix">—</b>g <span class="obj" id="c-greix-obj"></span></div>
+      </div>
+      <div class="bar-bg"><div class="bar-fill" id="c-bar-greix" style="background:var(--yellow);width:0%"></div></div>
+    </div>
+    <div class="mbar" onclick="showMacroModal('carbs')">
+      <div class="mbar-header">
+        <div class="mbar-name"><div class="mdot" style="background:var(--green)"></div>Carbohidrats</div>
+        <div class="mbar-val"><b id="c-carbs">—</b>g <span class="obj" id="c-carbs-obj"></span></div>
+      </div>
+      <div class="bar-bg"><div class="bar-fill" id="c-bar-carbs" style="background:var(--green);width:0%"></div></div>
+    </div>
+    <div class="mbar" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px" onclick="showMacroModal('fibra')">
+      <div class="mbar-header">
+        <div class="mbar-name"><div class="mdot" style="background:var(--purple)"></div>Fibra</div>
+        <div class="mbar-val"><b id="c-fibra">—</b>g <span class="obj" id="c-fibra-obj"></span></div>
+      </div>
+      <div class="bar-bg"><div class="bar-fill" id="c-bar-fibra" style="background:var(--purple);width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- Entries -->
+  <div id="c-entries"></div>
+
+</div><!-- /page-cerca -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: PLATS
+══════════════════════════════════════════════════════════ -->
+<div id="page-plats" class="page">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div style="display:flex;gap:6px">
+      <button class="plat-tab active" id="tab-myplats" onclick="switchPlatTab('myplats')">🍽️ Els meus plats</button>
+      <button class="plat-tab" id="tab-receptes" onclick="switchPlatTab('receptes')">🥗 Receptes</button>
+    </div>
+    <button class="btn btn-primary btn-sm" id="btn-nou-plat" onclick="togglePlatForm(true)">＋ Nou plat</button>
+  </div>
+
+  <!-- Formulari nou/editar plat -->
+  <div class="plat-form" id="plat-form" style="display:none">
+    <div class="card-title" id="plat-form-title" style="margin-bottom:12px">Nou plat</div>
+    <input type="hidden" id="plat-edit-id">
+    <input type="hidden" id="plat-origen" value="plat">
+    <div class="form-group">
+      <label class="lbl">Nom del plat</label>
+      <input type="text" id="plat-nom" placeholder="Ex: Esmorzar habitual, Amanida César…">
+    </div>
+    <div class="form-group">
+      <label class="lbl">Àpat habitual</label>
+      <div class="meal-grid" id="mg-plat" style="grid-template-columns:repeat(5,1fr)">
+        <button class="meal-chip active" data-m="Qualsevol" onclick="selMeal(this,'plat')"><span class="mi">📋</span>Tots</button>
+        <button class="meal-chip" data-m="Esmorzar"  onclick="selMeal(this,'plat')"><span class="mi">☀️</span>Esmorzar</button>
+        <button class="meal-chip" data-m="Dinar"     onclick="selMeal(this,'plat')"><span class="mi">🍽️</span>Dinar</button>
+        <button class="meal-chip" data-m="Berenar"   onclick="selMeal(this,'plat')"><span class="mi">🍎</span>Berenar</button>
+        <button class="meal-chip" data-m="Sopar"     onclick="selMeal(this,'plat')"><span class="mi">🌙</span>Sopar</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="lbl">Ingredients i quantitats</label>
+      <textarea id="plat-ingredients" rows="4"
+        placeholder="Ex: 80g flocs de civada, 200ml llet sencera, 1 plàtan, 10g mel"></textarea>
+      <div class="hint">Escriu els ingredients tal com els diries en veu alta. Claude els interpretarà automàticament.</div>
+    </div>
+    <div class="form-group">
+      <label class="lbl">Notes (opcional)</label>
+      <input type="text" id="plat-notes" placeholder="Ex: Versió amb mel, sense fruita…">
+    </div>
+    <div class="form-group">
+      <label class="lbl">Racions totals de la recepta</label>
+      <input type="number" id="plat-racions" min="1" max="100" placeholder="Ex: 19" style="width:100px">
+      <div class="hint">Si saps quantes racions té la recepta, posa-ho aquí. Quan l'usis, introdueix 1/X al camp ració lliure.</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="savePlat()">💾 Desar</button>
+      <button class="btn btn-ghost" onclick="togglePlatForm(false)">Cancel·lar</button>
+    </div>
+  </div>
+
+  <!-- Llista de plats -->
+  <div id="plats-list">
+    <div class="empty"><div class="empty-icon">⏳</div><div class="empty-txt">Carregant…</div></div>
+  </div>
+
+</div><!-- /page-plats -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: PES
+══════════════════════════════════════════════════════════ -->
+<div id="page-pes" class="page">
+
+  <!-- Gràfica evolució -->
+  <div class="card" id="pes-chart-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="card-title" style="margin-bottom:0">Evolució del pes</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-ghost"   id="pes-btn-14" onclick="loadPesChart(14)" style="padding:5px 10px;font-size:11px">14d</button>
+        <button class="btn btn-sm btn-primary" id="pes-btn-30" onclick="loadPesChart(30)" style="padding:5px 10px;font-size:11px">30d</button>
+        <button class="btn btn-sm btn-ghost"   id="pes-btn-90" onclick="loadPesChart(90)" style="padding:5px 10px;font-size:11px">90d</button>
+      </div>
+    </div>
+    <div id="pes-chart-svg" style="width:100%;height:140px;position:relative">
+      <div class="empty" style="padding:10px 0"><div class="empty-txt">Carregant…</div></div>
+    </div>
+    <div id="pes-chart-legend" style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--text3)">
+      <span id="pes-min-lbl"></span><span id="pes-max-lbl"></span>
+    </div>
+  </div>
+
+  <!-- Últimes entrades -->
+  <div class="card">
+    <div class="card-title">📋 Últims registres</div>
+    <div id="pes-history-list">
+      <div class="empty"><div class="empty-txt">Carregant…</div></div>
+    </div>
+  </div>
+
+  <!-- Input nou pes -->
+  <div class="card">
+    <div class="card-title">⚖️ Registrar pes</div>
+    <div class="form-group">
+      <label class="lbl">Pes (kg)</label>
+      <input type="number" id="pes-kg-input" step="0.1" min="30" max="300" placeholder="Ex: 82.5">
+    </div>
+    <div class="form-group">
+      <label class="lbl">Data</label>
+      <input type="date" id="pes-data-input">
+    </div>
+    <button class="btn btn-primary" id="btn-save-pes" onclick="savePes()">💾 Desar pes</button>
+  </div>
+
+</div><!-- /page-pes -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: ADMIN — Neteja de catàleg
+══════════════════════════════════════════════════════════ -->
+<div id="page-admin" class="page">
+
+  <!-- Secció 1: Neteja duplicats -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div class="card-title" style="margin:0">🔧 Neteja del catàleg</div>
+      <button class="btn btn-ghost" style="width:auto;padding:6px 12px;font-size:12px" onclick="goPage('scan')">← Tornar</button>
+    </div>
+    <p style="font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:12px">
+      Detecta Aliments amb noms similars o duplicats. Tria quin vols conservar i el sistema re-vincularà totes les línies d'àpat i arxivarà l'entrada obsoleta.
+    </p>
+    <button class="btn btn-primary" onclick="loadAdminDuplicats()">🔍 Analitzar catàleg</button>
+  </div>
+  <div id="admin-results"></div>
+
+  <!-- Secció 2: Recalcula línies -->
+  <div class="card" style="margin-top:4px">
+    <div class="card-title">🔄 Recalcula línies d'àpat</div>
+    <p style="font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:12px">
+      Si has corregit les dades nutricionals d'un Aliment al catàleg, recalcula les línies existents que hi fan referència.
+    </p>
+    <div class="form-group">
+      <label class="lbl">Cerca aliment</label>
+      <input type="text" id="adm-aliment-cerca" placeholder="Ex: AOVE, Avellanes…" oninput="cercaAlimentAdmin()" autocomplete="off">
+    </div>
+    <div id="adm-aliment-resultats" style="margin-bottom:8px"></div>
+    <div id="adm-recalc-preview" style="display:none">
+      <div class="divider"></div>
+      <div id="adm-recalc-info" style="font-size:13px;color:var(--text2);margin-bottom:10px"></div>
+      <button class="btn btn-primary" onclick="confirmaRecalcul()">⚡ Recalcula les línies</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: LÍNIES — Historial per aliment
+══════════════════════════════════════════════════════════ -->
+<div id="page-linies" class="page">
+
+  <div class="card">
+    <div class="card-title" style="margin-bottom:10px">📋 Historial de línies</div>
+    <div class="form-group" style="margin-bottom:8px">
+      <input type="text" id="lin-cerca" placeholder="Cerca per nom d'aliment…" autocomplete="off"
+        oninput="linCercaInput()" style="font-size:15px">
+    </div>
+    <div id="lin-suggeriments" style="margin-bottom:4px"></div>
+  </div>
+
+  <div id="lin-resultats"></div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="nav" style="font-size:9px">
+  <button class="nav-btn active" id="nav-scan" onclick="goPage('scan')" style="font-size:9px">
+    <span class="nav-icon">📷</span>Escanejar
+  </button>
+  <button class="nav-btn" id="nav-text" onclick="goPage('text')" style="font-size:9px">
+    <span class="nav-icon">✏️</span>Text
+  </button>
+  <button class="nav-btn" id="nav-today" onclick="goPage('today');loadToday()" style="font-size:9px">
+    <span class="nav-icon">📊</span>Avui
+  </button>
+  <button class="nav-btn" id="nav-pes" onclick="goPage('pes');loadPesPage()" style="font-size:9px">
+    <span class="nav-icon">⚖️</span>Pes
+  </button>
+  <button class="nav-btn" id="nav-setmana" onclick="goPage('setmana');loadSetmana()" style="font-size:9px">
+    <span class="nav-icon">📅</span>Setmana
+  </button>
+  <button class="nav-btn" id="nav-cerca" onclick="goPage('cerca')" style="font-size:9px">
+    <span class="nav-icon">🔍</span>Cerca
+  </button>
+  <button class="nav-btn" id="nav-plats" onclick="goPage('plats');loadPlats()" style="font-size:9px">
+    <span class="nav-icon">🍽️</span>Plats
+  </button>
+  <button class="nav-btn" id="nav-linies" onclick="goPage('linies')" style="font-size:9px">
+    <span class="nav-icon">📋</span>Línies
+  </button>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══ MODAL AFEGIR PLAT ═══ -->
+<div class="modal-bg" id="m-useplat" onclick="if(event.target===this)closePlatModal()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="m-useplat-nom">Afegir plat</div>
+    <div class="hint" style="margin-bottom:10px">Quina ració faràs?</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="porcio-chip" onclick="setPorcio(0.25,this)">¼</button>
+      <button class="porcio-chip" onclick="setPorcio(0.33,this)">⅓</button>
+      <button class="porcio-chip" onclick="setPorcio(0.5,this)">½</button>
+      <button class="porcio-chip" onclick="setPorcio(0.75,this)">¾</button>
+      <button class="porcio-chip porcio-active" id="porcio-1" onclick="setPorcio(1,this)">1</button>
+      <button class="porcio-chip" onclick="setPorcio(1.5,this)">1½</button>
+      <button class="porcio-chip" onclick="setPorcio(2,this)">×2</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px">
+      <input type="text" id="porcio-custom" placeholder="ex: 350/2000 · 1/3 · 0.4"
+        style="flex:1;padding:8px 12px;border-radius:10px;border:2px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px;font-family:inherit"
+        oninput="setPorcioCustom(this.value)">
+      <div id="porcio-preview" style="font-size:13px;font-weight:700;color:var(--accent);min-width:36px;text-align:right"></div>
+    </div>
+    <div class="hint" style="margin-bottom:12px">Selecciona el tipus d'àpat:</div>
+    <div class="meal-grid">
+      <button class="meal-chip" data-m="Esmorzar" onclick="confirmUsePlat('Esmorzar')"><span class="mi">☀️</span>Esmorzar</button>
+      <button class="meal-chip" data-m="Dinar"    onclick="confirmUsePlat('Dinar')"><span class="mi">🍽️</span>Dinar</button>
+      <button class="meal-chip" data-m="Berenar"  onclick="confirmUsePlat('Berenar')"><span class="mi">🍎</span>Berenar</button>
+      <button class="meal-chip" data-m="Sopar"    onclick="confirmUsePlat('Sopar')"><span class="mi">🌙</span>Sopar</button>
+    </div>
+    <button class="btn btn-ghost" style="margin-top:12px" onclick="closePlatModal()">Cancel·lar</button>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS MODAL ═══ -->
+<div class="modal-bg" id="m-settings" onclick="if(event.target===this)closeSettings()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚙️ Configuració</div>
+
+    <div class="form-group">
+      <label class="lbl">Notion Integration Token</label>
+      <input type="password" id="s-notion" placeholder="secret_…" autocomplete="off">
+      <div class="hint">Crea-la a <a href="https://www.notion.so/my-integrations" target="_blank">notion.so/my-integrations</a> i assegura't d'afegir la integració a les BDs d'Alimentació.</div>
+    </div>
+
+    <div class="form-group">
+      <label class="lbl">Claude API Key</label>
+      <input type="password" id="s-claude" placeholder="sk-ant-…" autocomplete="off">
+      <div class="hint">Obté-la a <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
+    </div>
+
+    <div class="form-group">
+      <label class="lbl">Proxy URL (Cloudflare Worker)</label>
+      <input type="text" id="s-proxy" placeholder="https://notion-proxy.XXX.workers.dev">
+      <div class="hint">URL del teu Cloudflare Worker que fa de proxy per a Notion. <a href="https://workers.cloudflare.com" target="_blank">Crea'l gratis aquí</a>.</div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="modal-title" style="font-size:15px;margin-bottom:12px">📱 Preferències</div>
+
+    <div class="form-group">
+      <label class="lbl">Pestanya per defecte en obrir</label>
+      <select id="s-default-tab" style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px">
+        <option value="today">📊 Avui</option>
+        <option value="scan">📷 Escanejar</option>
+        <option value="text">✏️ Text</option>
+        <option value="setmana">📅 Setmana</option>
+        <option value="cerca">🔍 Cerca</option>
+        <option value="pes">⚖️ Pes</option>
+        <option value="plats">🍽️ Plats</option>
+      </select>
+    </div>
+
+    <div class="divider"></div>
+    <div class="modal-title" style="font-size:15px;margin-bottom:12px">🎯 Objectius</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group">
+        <label class="lbl">Pes objectiu (kg)</label>
+        <input type="number" id="s-pes-obj" placeholder="ex: 78" step="0.1" min="40" max="200">
+      </div>
+      <div class="form-group">
+        <label class="lbl">Velocitat pèrdua (kg/set)</label>
+        <input type="number" id="s-velocitat" placeholder="ex: 0.25" step="0.05" min="0" max="1">
+        <div class="hint">0 = manteniment · 0.25 = suau · 0.5 = moderat</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="hint" style="margin-bottom:14px;line-height:1.8">
+      <b style="color:var(--text2)">IDs de Notion (preconfigurat):</b><br>
+      Àpats: <code style="color:var(--accent)">b512738f…</code><br>
+      Línies: <code style="color:var(--accent)">8d4c5295…</code><br>
+      Aliments: <code style="color:var(--accent)">c36bb073…</code><br>
+      Resum Diari: <code style="color:var(--accent)">bb10a781…</code>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveSettings()">💾 Desar</button>
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="closeSettings()">Tancar</button>
+    <div class="divider"></div>
+    <button class="btn btn-ghost" style="margin-top:0;font-size:13px;color:var(--text3)" onclick="closeSettings();goPage('admin')">🔧 Neteja del catàleg d'aliments</button>
+  </div>
+</div>
+
+<!-- MODAL: Copiar línia -->
+<div class="modal-bg" id="m-copia-linia" onclick="if(event.target===this)closeCopiaLinia()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📋 Copiar línia a…</div>
+    <div id="m-copia-nom" style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--accent)"></div>
+
+    <div class="form-group">
+      <label class="lbl">Quantitat còpia (g)</label>
+      <input type="number" id="copia-qty" min="1" max="5000" style="font-size:16px">
+    </div>
+    <div class="form-group">
+      <label class="lbl">Data destí</label>
+      <input type="date" id="copia-data">
+    </div>
+    <div class="form-group">
+      <label class="lbl">Àpat destí</label>
+      <div class="meal-grid" id="mg-copia">
+        <button class="meal-chip active" data-m="Esmorzar" onclick="selMeal(this,'copia')"><span class="mi">☀️</span>Esmorzar</button>
+        <button class="meal-chip" data-m="Dinar"    onclick="selMeal(this,'copia')"><span class="mi">🍽️</span>Dinar</button>
+        <button class="meal-chip" data-m="Berenar"  onclick="selMeal(this,'copia')"><span class="mi">🍎</span>Berenar</button>
+        <button class="meal-chip" data-m="Sopar"    onclick="selMeal(this,'copia')"><span class="mi">🌙</span>Sopar</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="confirmarCopiaLinia()">📋 Copiar</button>
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="closeCopiaLinia()">Cancel·lar</button>
+  </div>
+</div>
+
+<!-- NOT FOUND MODAL -->
+<div class="modal-bg" id="m-notfound" onclick="if(event.target===this)closeNotFound()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">😕 Producte no trobat</div>
+    <p style="color:var(--text2);font-size:14px;margin-bottom:16px;line-height:1.5">
+      Aquest codi de barres no és a OpenFoodFacts. Introdueix les dades nutricionals manualment (valors per 100g).
+    </p>
+    <div class="form-group">
+      <label class="lbl">Nom del producte</label>
+      <input type="text" id="mf-name" placeholder="Ex: Galetes Maria Fontaneda">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group">
+        <label class="lbl">Kcal /100g</label>
+        <input type="number" id="mf-kcal" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="lbl">Proteïna /100g</label>
+        <input type="number" id="mf-prot" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="lbl">Greix /100g</label>
+        <input type="number" id="mf-greix" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="lbl">Carbs /100g</label>
+        <input type="number" id="mf-carbs" placeholder="0">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="useManual()">Continuar →</button>
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="closeNotFound();resetScan()">Cancel·lar</button>
+  </div>
+</div>
+
+
+<!-- Modal: detall macro -->
+<div class="modal-bg" id="m-macro" onclick="if(event.target===this)closeMacroModal()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="modal-title" id="m-macro-title" style="margin-bottom:0">—</div>
+      <button class="btn btn-ghost" style="padding:4px 10px;font-size:13px" onclick="closeMacroModal()">✕</button>
+    </div>
+    <div id="m-macro-loading" style="text-align:center;padding:24px 0;color:var(--text3)">⏳ Carregant…</div>
+    <div id="m-macro-list" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════ -->
+<script>
+// ── NOTION DB IDs ─────────────────────────────────────
+const DB_APATS    = 'be4fd159-cdbf-4636-b6e7-41246529fd91';
+const DB_LINIES   = '581de9fb-137c-4a87-b3aa-34fe42dce956';
+const DB_ALIMENTS = 'b93d7d75-bcdf-4e10-bc98-2c108e2afdee';
+const DB_RESUM    = '76abddd1-e686-45f6-9fae-ec13f487a7d3';
+const DB_PES        = 'd5e98d6e-6e1d-415d-9c32-bd3ee1a94170';
+const DB_EXERCICIS  = '58bdc05e-5352-4ca6-8c66-f1ed162572f7';
+const DB_PLATS      = '8996e9fc-00f5-47f8-9a80-7a687e20a67d';
+const CONFIG_ID   = '3463d60a-7969-8106-afee-ec3e472095e3'; // Configuració row ID
+
+// ── STATE ─────────────────────────────────────────────
+let cfg = {
+  notionToken: ls('notionToken'),
+  claudeKey:   ls('claudeKey'),
+  proxyUrl:    ls('proxyUrl') || '',
+};
+let meal = { scan: 'Esmorzar', text: 'Esmorzar' };
+let product = null;    // current scanned product
+let items = [];        // Claude-parsed items
+let scanner = null;
+let scanning = false;
+let _todayApatMap = {}; // apatId → { tipus, notionUrl } — populated by loadToday()
+let _platPorcioFactor = 1; // factor de ració quan s'usa un plat (½, ⅓, etc.)
+
+// ── INIT ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  setDates();
+  initScanner();
+  document.getElementById('c-date').value = todayISO();
+  meal['cerca'] = 'Tots';
+  meal['plat']  = 'Qualsevol';
+
+  // Pestanya per defecte
+  const defaultTab = ls('defaultTab') || 'today';
+  const tabLoaders = {
+    today:   () => { goPage('today');   loadToday(); },
+    scan:    () => { goPage('scan'); },
+    text:    () => { goPage('text'); },
+    setmana: () => { goPage('setmana'); loadSetmana(); },
+    cerca:   () => { goPage('cerca'); },
+    pes:     () => { goPage('pes');     loadPesPage(); },
+    plats:   () => { goPage('plats');   loadPlats(); },
+  };
+  (tabLoaders[defaultTab] || tabLoaders['today'])();
+
+  loadExercici(todayISO());
+  if (!cfg.notionToken || !cfg.claudeKey) setTimeout(openSettings, 600);
+  // Importació de recepta via URL (?import=Nom&ing=...&racions=N)
+  checkRecipeImport();
+});
+
+function checkRecipeImport() {
+  const params = new URLSearchParams(location.search);
+  const nom    = params.get('import');
+  const ing    = params.get('ing');
+  const racions = parseInt(params.get('racions')) || null;
+  if (!nom || !ing) return;
+
+  // Neteja la URL sense recarregar
+  history.replaceState({}, '', location.pathname);
+
+  // Obre el formulari de plats pre-omplert
+  setTimeout(() => {
+    goPage('plats');
+    document.getElementById('nav-plats').classList.add('active');
+    togglePlatForm(true);
+    document.getElementById('plat-nom').value = nom;
+    document.getElementById('plat-ingredients').value = ing;
+    if (racions) document.getElementById('plat-racions').value = racions;
+    document.getElementById('plat-origen').value = 'recepta';
+    switchPlatTab('receptes');
+    const racioHint = racions ? ` (${racions} racions → usa 1/${racions} al camp ració)` : '';
+    toast('📥 Recepta importada' + racioHint + ' — revisa i desa el plat', 'ok');
+    document.getElementById('plat-nom').scrollIntoView({ behavior: 'smooth' });
+  }, 400);
+}
+
+function ls(k) { return localStorage.getItem(k) || ''; }
+function lsSet(k, v) { localStorage.setItem(k, v); }
+
+function todayISO() { return new Date().toISOString().split('T')[0]; }
+
+function setDates() {
+  const d = new Date();
+  const wd = ['Diumenge','Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte'];
+  const mo = ['gen','feb','mar','abr','mai','jun','jul','ago','set','oct','nov','des'];
+  const s = `${wd[d.getDay()]}, ${d.getDate()} ${mo[d.getMonth()]} ${d.getFullYear()}`;
+  document.getElementById('h-date').textContent = s;
+  document.getElementById('today-date-lbl').textContent = s;
+}
+
+// ── NAVIGATION ────────────────────────────────────────
+function goPage(tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  document.getElementById('nav-' + tab).classList.add('active');
+  if (tab !== 'scan') stopScanner();
+  else startScanner();
+}
+
+// ── MEAL SELECTOR ─────────────────────────────────────
+function selMeal(btn, ctx) {
+  document.querySelectorAll(`#mg-${ctx} .meal-chip`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  meal[ctx] = btn.dataset.m;
+}
+
+// ── SCANNER ───────────────────────────────────────────
+function initScanner() {
+  try {
+    scanner = new Html5Qrcode('reader');
+    startScanner();
+  } catch(e) {
+    document.getElementById('scan-status').textContent = '⚠️ Error iniciant escàner: ' + e;
+  }
+}
+
+function startScanner() {
+  if (scanning || !scanner) return;
+  // Amplada gran i horitzontal per codis EAN-13; FPS alt per no perdre frames
+  const boxW = Math.min(Math.round((window.innerWidth || 360) * 0.85), 340);
+  const boxH = Math.round(boxW * 0.38); // ratio horitzontal per barres lineals
+  scanner.start(
+    { facingMode: 'environment' },
+    {
+      fps: 25,
+      qrbox: { width: boxW, height: boxH },
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.UPC_E,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.ITF,
+        Html5QrcodeSupportedFormats.QR_CODE,
+      ],
+      aspectRatio: 1.5,
+      disableFlip: false,
+    },
+    onBarcode,
+    () => {}
+  ).then(() => scanning = true)
+   .catch(e => {
+     document.getElementById('scan-status').textContent =
+       '⚠️ Càmera no disponible. ' + (e.message || e);
+   });
+}
+
+function stopScanner() {
+  if (!scanning || !scanner) return;
+  scanner.stop().then(() => scanning = false).catch(() => {});
+}
+
+let _lastBarcode = '';
+let _torchOn = false;
+
+async function toggleTorch() {
+  if (!scanning || !scanner) return;
+  try {
+    const track = scanner?.getRunningTrackCameraCapabilities?.();
+    if (!track) return;
+    _torchOn = !_torchOn;
+    await track.torchFeature()?.apply(_torchOn);
+    const btn = document.getElementById('btn-torch');
+    if (btn) btn.style.color = _torchOn ? 'var(--accent)' : 'var(--text2)';
+  } catch(e) {
+    toast('Llanterna no disponible en aquest dispositiu', 'err');
+  }
+}
+
+function onBarcode(code) {
+  _lastBarcode = code;
+  stopScanner();
+  document.getElementById('scan-status').textContent = `🔍 Barcode: ${code} · Buscant a OpenFoodFacts…`;
+  lookupOFF(code);
+}
+
+function resetScan() {
+  product = null;
+  document.getElementById('product-result').style.display = 'none';
+  document.getElementById('scan-status').textContent = 'Apunta la càmera al codi de barres del producte';
+  startScanner();
+}
+
+// ── OPENFOODFACTS ─────────────────────────────────────
+async function lookupOFF(barcode) {
+  try {
+    const r = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+    const d = await r.json();
+    if (d.status === 0 || !d.product) {
+      document.getElementById('scan-status').textContent = 'Producte no trobat a OpenFoodFacts.';
+      document.getElementById('m-notfound').classList.add('open');
+      return;
+    }
+    const p = d.product, n = p.nutriments || {};
+    const toN = x => Math.round((parseFloat(x) || 0) * 10) / 10;
+    product = {
+      barcode,
+      name:  p.product_name || p.product_name_ca || p.product_name_es || 'Producte sense nom',
+      brand: p.brands || '',
+      per100: {
+        kcal:  Math.round(n['energy-kcal_100g'] || (n['energy_100g'] || 0) / 4.184),
+        prot:  toN(n['proteins_100g']),
+        greix: toN(n['fat_100g']),
+        carbs: toN(n['carbohydrates_100g']),
+        fibra: toN(n['fiber_100g']),
+      }
+    };
+    showProduct();
+  } catch(e) {
+    document.getElementById('scan-status').textContent = '❌ Error de xarxa: ' + e.message;
+  }
+}
+
+function showProduct() {
+  document.getElementById('scan-status').textContent = '✅ Producte trobat!';
+  document.getElementById('product-result').style.display = 'block';
+  document.getElementById('p-name').value = product.name;
+  document.getElementById('p-brand').textContent = product.brand || 'Marca desconeguda';
+  document.getElementById('p-kcal').textContent = product.per100.kcal;
+  document.getElementById('p-prot').textContent = product.per100.prot;
+  document.getElementById('p-greix').textContent = product.per100.greix;
+  document.getElementById('p-carbs').textContent = product.per100.carbs;
+  document.getElementById('qty').value = 100;
+  calcQty();
+}
+
+function adjQty(d) {
+  const inp = document.getElementById('qty');
+  inp.value = Math.max(1, (parseInt(inp.value) || 100) + d);
+  calcQty();
+}
+
+function calcQty() {
+  if (!product) return;
+  const q = parseInt(document.getElementById('qty').value) || 100;
+  const r = (v) => Math.round(v * q / 100 * 10) / 10;
+  const kcal = Math.round(product.per100.kcal * q / 100);
+  document.getElementById('qty-total').textContent =
+    `→ ${kcal} kcal · ${r(product.per100.prot)}g prot · ${r(product.per100.greix)}g greix · ${r(product.per100.carbs)}g carbs`;
+}
+
+function closeNotFound() { document.getElementById('m-notfound').classList.remove('open'); }
+
+function useManual() {
+  product = {
+    barcode: 'manual',
+    name:  document.getElementById('mf-name').value.trim() || 'Producte manual',
+    brand: '',
+    per100: {
+      kcal:  parseFloat(document.getElementById('mf-kcal').value) || 0,
+      prot:  parseFloat(document.getElementById('mf-prot').value) || 0,
+      greix: parseFloat(document.getElementById('mf-greix').value) || 0,
+      carbs: parseFloat(document.getElementById('mf-carbs').value) || 0,
+      fibra: 0,
+    }
+  };
+  closeNotFound();
+  showProduct();
+}
+
+// ── CLAUDE NLP ────────────────────────────────────────
+async function interpretText() {
+  const text = document.getElementById('nl-input').value.trim();
+  if (!text) { toast('Escriu el que has menjat', 'err'); return; }
+  if (!cfg.claudeKey) { openSettings(); toast('Configura la Claude API Key', 'err'); return; }
+
+  const btn = document.getElementById('btn-interpret');
+  btn.innerHTML = '<span class="spin"></span> Analitzant…';
+  btn.disabled = true;
+
+  const prompt = `Ets un expert en nutrició. Analitza el text i retorna un JSON array amb cada aliment o plat detectat.
+Calcula les macros amb valors estàndard de nutrició.
+Si no coneixes la quantitat exacta, fes una estimació raonable.
+Retorna ÚNICAMENT el JSON, sense cap explicació ni format markdown.
+
+Format de sortida: [{"nom":"string","quantitat_g":number,"kcal":number,"proteina_g":number,"greix_g":number,"carbs_g":number,"fibra_g":number}]
+
+Text a analitzar: "${text}"`;
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': cfg.claudeKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    if (!r.ok) {
+      const e = await r.json();
+      throw new Error(e.error?.message || `HTTP ${r.status}`);
+    }
+    const d = await r.json();
+    let raw = d.content[0].text.trim();
+    raw = raw.replace(/```(?:json)?\n?/g, '').replace(/\n?```/g, '');
+    items = JSON.parse(raw);
+    // Aplicar factor de ració si ve d'un plat
+    if (_platPorcioFactor !== 1) {
+      const f = _platPorcioFactor;
+      items = items.map(it => ({
+        ...it,
+        quantitat_g: Math.round(it.quantitat_g * f),
+        kcal:        Math.round(it.kcal * f),
+        proteina_g:  Math.round(it.proteina_g * f * 10) / 10,
+        greix_g:     Math.round(it.greix_g * f * 10) / 10,
+        carbs_g:     Math.round(it.carbs_g * f * 10) / 10,
+        fibra_g:     Math.round((it.fibra_g || 0) * f * 10) / 10,
+      }));
+    }
+    showItems();
+  } catch(e) {
+    toast('Error Claude: ' + e.message, 'err');
+  } finally {
+    btn.innerHTML = '🧠 Analitzar amb Claude';
+    btn.disabled = false;
+  }
+}
+
+function showItems() {
+  const list = document.getElementById('items-list');
+  list.innerHTML = '';
+  items.forEach((it, i) => {
+    const el = document.createElement('div');
+    el.className = 'item-row';
+    el.innerHTML = `
+      <span class="item-check">✅</span>
+      <div class="item-info">
+        <div class="item-name">${it.nom}</div>
+        <div class="item-macros">${it.quantitat_g}g · ${it.kcal} kcal · ${it.proteina_g}g prot · ${it.greix_g}g greix · ${it.carbs_g}g carbs</div>
+      </div>
+      <span class="item-del" onclick="removeItem(${i})">✕</span>`;
+    list.appendChild(el);
+  });
+  document.getElementById('interp-results').style.display = 'block';
+}
+
+
+// ── IDENTIFICAR I CATALOGAR PRODUCTE ─────────────────
+let _catProdOptions = [];
+
+async function identificarProducte() {
+  const text = document.getElementById('nl-input').value.trim();
+  if (!text) { toast('Escriu el nom del producte', 'err'); return; }
+  if (!cfg.claudeKey) { openSettings(); return; }
+
+  const btn = document.getElementById('btn-catalogar-prod');
+  btn.innerHTML = '<span class="spin"></span> Buscant…';
+  btn.disabled = true;
+  document.getElementById('cat-prod-results').style.display = 'none';
+
+  try {
+    const prompt = `L'usuari vol catalogar aquest producte alimentari: "${text}".
+Retorna entre 3 i 6 variants possibles d'aquest producte amb els seus valors nutricionals per 100g.
+Inclou variants de marca, preparació o nom alternatiu si és rellevant.
+Respon ÚNICAMENT amb un array JSON sense cap text addicional:
+[{"nom":"Nom del producte","kcal":0,"proteina_g":0,"greix_g":0,"carbs_g":0,"fibra_g":0}]`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': cfg.claudeKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+    const data = await res.json();
+    const raw = data.content?.[0]?.text || '[]';
+    const match = raw.match(/\[[\s\S]*\]/);
+    _catProdOptions = match ? JSON.parse(match[0]) : [];
+
+    if (!_catProdOptions.length) {
+      toast('No s\'han trobat variants', 'err');
+      return;
+    }
+
+    const listEl = document.getElementById('cat-prod-list');
+    listEl.innerHTML = _catProdOptions.map((p, i) => `
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <input type="radio" name="cat-prod" id="cp-${i}" value="${i}" ${i===0?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;margin-top:3px;flex-shrink:0">
+        <label for="cp-${i}" style="cursor:pointer;flex:1">
+          <div style="font-size:14px;font-weight:700">${p.nom}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${p.kcal} kcal · ${p.proteina_g}g prot · ${p.greix_g}g greix · ${p.carbs_g}g carbs · ${p.fibra_g}g fibra &nbsp;/100g</div>
+        </label>
+      </div>`).join('');
+
+    // Pre-omplir el codi de barres si ve d'un escaneig fallit
+    document.getElementById('cat-prod-barcode').value = _lastBarcode || '';
+    document.getElementById('cat-prod-results').style.display = 'block';
+
+  } catch(e) {
+    toast('❌ Error: ' + e.message, 'err');
+  } finally {
+    btn.innerHTML = '📚 Identificar i catalogar producte';
+    btn.disabled = false;
+  }
+}
+
+async function guardarProducteSeleccionat() {
+  const sel = document.querySelector('input[name="cat-prod"]:checked');
+  if (!sel) return;
+  const p = _catProdOptions[parseInt(sel.value)];
+  if (!p) return;
+
+  const barcode = document.getElementById('cat-prod-barcode').value.trim();
+
+  const btn = document.querySelector('#cat-prod-results .btn-primary');
+  btn.innerHTML = '<span class="spin"></span> Desant…';
+  btn.disabled = true;
+
+  try {
+    const props = {
+      'Nom':        { title: [{ text: { content: p.nom } }] },
+      'kcal/100g':  { number: p.kcal       },
+      'Prot/100g':  { number: p.proteina_g },
+      'Greix/100g': { number: p.greix_g    },
+      'Carbs/100g': { number: p.carbs_g    },
+      'Fibra/100g': { number: p.fibra_g    },
+      'Origen':     { select: { name: 'Comercial' } },
+    };
+    if (barcode) {
+      props['Codi de barres'] = { rich_text: [{ text: { content: barcode } }] };
+    }
+    await nCreate({ parent: { database_id: DB_ALIMENTS }, properties: props });
+    if (barcode) _lastBarcode = ''; // neteja perquè no es reutilitzi
+    toast(`✅ "${p.nom}" afegit al catàleg!`, 'ok');
+    document.getElementById('cat-prod-results').style.display = 'none';
+  } catch(e) {
+    toast('❌ Error: ' + e.message, 'err');
+    btn.innerHTML = '📚 Afegir al catàleg';
+    btn.disabled = false;
+  }
+}
+
+function removeItem(i) {
+  items.splice(i, 1);
+  if (items.length === 0) clearText();
+  else showItems();
+}
+
+function clearText() {
+  items = [];
+  document.getElementById('interp-results').style.display = 'none';
+}
+
+// ── NOTION API ────────────────────────────────────────
+async function nCall(path, method, body) {
+  const proxyUrl = cfg.proxyUrl || '/.netlify/functions/notion-proxy';
+  const r = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, method: method || 'GET', body: body || null, token: cfg.notionToken }),
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.message || data.error || `Notion ${r.status}`);
+  return data;
+}
+
+async function nQuery(dbId, filter) {
+  return nCall(`/v1/databases/${dbId}/query`, 'POST', filter ? { filter } : {});
+}
+async function nQueryFull(dbId, body) {
+  return nCall(`/v1/databases/${dbId}/query`, 'POST', body);
+}
+async function nGetPage(pageId) {
+  return nCall(`/v1/pages/${pageId}`, 'GET');
+}
+async function nArchive(pageId) {
+  return nCall(`/v1/pages/${pageId}`, 'PATCH', { archived: true });
+}
+
+async function nCreate(body) {
+  return nCall('/v1/pages', 'POST', body);
+}
+async function nPatch(pageId, properties) {
+  return nCall(`/v1/pages/${pageId}`, 'PATCH', { properties });
+}
+
+// ── ENSURE RESUM DIARI ────────────────────────────────
+async function ensureResum(dateStr) {
+  const res = await nQuery(DB_RESUM, { property: 'Data', date: { equals: dateStr } });
+  if (res.results?.length) return res.results[0].id;
+
+  const d = new Date(dateStr + 'T12:00:00');
+  const dw = ['Dg','Dl','Dt','Dc','Dj','Dv','Ds'];
+  const parts = dateStr.split('-');
+  const nom = `${dw[d.getDay()]} ${parts[2]}/${parts[1]}/${parts[0]}`;
+
+  const page = await nCreate({
+    parent: { database_id: DB_RESUM },
+    properties: {
+      'Nom':          { title: [{ text: { content: nom } }] },
+      'Data':         { date: { start: dateStr } },
+      'Configuració': { relation: [{ id: CONFIG_ID }] },
+    }
+  });
+  return page.id;
+}
+
+// ── ENSURE ÀPAT ───────────────────────────────────────
+async function createApat(dateStr, tipusApat, resumId) {
+  // Check if an àpat already exists for this date + categoria
+  const existing = await nQuery(DB_APATS, {
+    and: [
+      { property: 'Data',      date:   { equals: dateStr } },
+      { property: 'Categoria', select: { equals: tipusApat } },
+    ]
+  });
+  if (existing.results?.length) return existing.results[0].id;
+
+  // Create new if not found
+  const parts = dateStr.split('-');
+  const nom = `${tipusApat} · ${parts[2]}/${parts[1]}`;
+  const page = await nCreate({
+    parent: { database_id: DB_APATS },
+    properties: {
+      'Nom':          { title: [{ text: { content: nom } }] },
+      'Data':         { date: { start: dateStr } },
+      'Categoria':    { select: { name: tipusApat } },
+      'Resum diari':  { relation: [{ id: resumId }] },
+    }
+  });
+  return page.id;
+}
+
+// ── ENSURE ALIMENT (per text/Claude) ─────────────────
+async function ensureAliment(name, per100) {
+  const res = await nQuery(DB_ALIMENTS, {
+    property: 'Nom',
+    title: { contains: name.substring(0, 20) }
+  });
+  if (res.results?.length) {
+    // Usar les macros reals de la BD (no les estimades per Claude)
+    const p = res.results[0].properties;
+    return {
+      id: res.results[0].id,
+      per100: {
+        kcal:  p['kcal/100g']?.number  ?? per100.kcal,
+        prot:  p['Prot/100g']?.number  ?? per100.prot,
+        greix: p['Greix/100g']?.number ?? per100.greix,
+        carbs: p['Carbs/100g']?.number ?? per100.carbs,
+        fibra: p['Fibra/100g']?.number ?? per100.fibra ?? 0,
+      }
+    };
+  }
+
+  const page = await nCreate({
+    parent: { database_id: DB_ALIMENTS },
+    properties: {
+      'Nom':        { title: [{ text: { content: name } }] },
+      'kcal/100g':  { number: per100.kcal  },
+      'Prot/100g':  { number: per100.prot  },
+      'Greix/100g': { number: per100.greix },
+      'Carbs/100g': { number: per100.carbs },
+      'Fibra/100g': { number: per100.fibra || 0 },
+    }
+  });
+  return { id: page.id, per100 };
+}
+
+// ── ENSURE ALIMENT BY BARCODE (per escàner) ──────────
+async function ensureAlimentByBarcode(barcode, name, per100) {
+  const isManual = !barcode || barcode === 'manual';
+
+  // 1. Busca per codi de barres (identificador únic)
+  if (!isManual) {
+    const byCode = await nQueryFull(DB_ALIMENTS, {
+      filter: { property: 'Codi de barres', rich_text: { equals: barcode } }
+    });
+    if (byCode.results?.length) {
+      toast('📦 Producte identificat per codi de barres');
+      return byCode.results[0].id;
+    }
+  }
+
+  // 2. Busca per nom (per si ja existia sense codi)
+  const byName = await nQuery(DB_ALIMENTS, {
+    property: 'Nom',
+    title: { contains: name.substring(0, 20) }
+  });
+  if (byName.results?.length) {
+    const existingId = byName.results[0].id;
+    // Guarda el codi a l'entrada existent per a futures consultes
+    if (!isManual) {
+      await nPatch(existingId, {
+        'Codi de barres': { rich_text: [{ text: { content: barcode } }] },
+        'Origen': { select: { name: 'Comercial' } },
+      });
+    }
+    toast('🔗 Aliment existent vinculat al codi');
+    return existingId;
+  }
+
+  // 3. Crea nou aliment amb codi guardat
+  const props = {
+    'Nom':        { title: [{ text: { content: name } }] },
+    'kcal/100g':  { number: per100.kcal  },
+    'Prot/100g':  { number: per100.prot  },
+    'Greix/100g': { number: per100.greix },
+    'Carbs/100g': { number: per100.carbs },
+    'Fibra/100g': { number: per100.fibra || 0 },
+    'Origen':     { select: { name: 'Comercial' } },
+  };
+  if (!isManual) props['Codi de barres'] = { rich_text: [{ text: { content: barcode } }] };
+  const page = await nCreate({ parent: { database_id: DB_ALIMENTS }, properties: props });
+  toast('✨ Nou aliment creat al catàleg');
+  return page.id;
+}
+
+// ── CREATE LÍNIA ──────────────────────────────────────
+async function createLinia(apatId, alimentId, nom, qty, macros) {
+  await nCreate({
+    parent: { database_id: DB_LINIES },
+    properties: {
+      'Descripció':    { title: [{ text: { content: nom } }] },
+      'Àpat':          { relation: [{ id: apatId }] },
+      'Aliment':       { relation: [{ id: alimentId }] },
+      'Quantitat (g)': { number: qty },
+      'kcal':          { number: macros.kcal  },
+      'Prot (g)':      { number: macros.prot  },
+      'Greix (g)':     { number: macros.greix },
+      'Carbs (g)':     { number: macros.carbs },
+      'Fibra (g)':     { number: macros.fibra || 0 },
+    }
+  });
+}
+
+// ── SAVE SCANNED PRODUCT ──────────────────────────────
+async function saveScan() {
+  if (!product) return;
+  if (!cfg.notionToken) { openSettings(); return; }
+
+  const btn = document.getElementById('btn-save-scan');
+  btn.innerHTML = '<span class="spin"></span> Desant a Notion…';
+  btn.disabled = true;
+
+  try {
+    const dateStr = todayISO();
+    const qty = parseInt(document.getElementById('qty').value) || 100;
+    const m = meal.scan;
+    const r = (v) => Math.round(v * qty / 100 * 10) / 10;
+    const macros = {
+      kcal:  Math.round(product.per100.kcal * qty / 100),
+      prot:  r(product.per100.prot),
+      greix: r(product.per100.greix),
+      carbs: r(product.per100.carbs),
+      fibra: r(product.per100.fibra),
+    };
+
+    toast('Verificant Resum Diari…');
+    const resumId = await ensureResum(dateStr);
+    toast('Creant àpat…');
+    const apatId = await createApat(dateStr, m, resumId);
+    // Nom editable per l'usuari (permet forçar coincidència amb catàleg)
+    const productName = document.getElementById('p-name').value.trim() || product.name;
+    toast('Verificant catàleg d\'aliments…');
+    const alimentId = await ensureAlimentByBarcode(product.barcode, productName, product.per100);
+    toast('Afegint línia…');
+    await createLinia(apatId, alimentId, `${productName} ${qty}g`, qty, macros);
+
+    const productName2 = document.getElementById('p-name').value.trim() || product.name;
+    toast(`✅ ${productName2} afegit! (${macros.kcal} kcal)`, 'ok');
+    setTimeout(resetScan, 1500);
+  } catch(e) {
+    toast('❌ ' + e.message, 'err');
+  } finally {
+    btn.innerHTML = '➕ Afegir a Notion';
+    btn.disabled = false;
+  }
+}
+
+// ── CATALOG SCAN (only DB_ALIMENTS, no àpat) ─────────
+async function catalogScan() {
+  if (!product) return;
+  if (!cfg.notionToken) { openSettings(); return; }
+
+  const btn = document.getElementById('btn-catalog-scan');
+  btn.innerHTML = '<span class="spin"></span> Desant…';
+  btn.disabled = true;
+
+  try {
+    const productName = document.getElementById('p-name').value.trim() || product.name;
+    await ensureAlimentByBarcode(product.barcode, productName, product.per100);
+    toast(`📚 "${productName}" desat al catàleg`, 'ok');
+    setTimeout(resetScan, 1200);
+  } catch(e) {
+    toast('❌ ' + e.message, 'err');
+  } finally {
+    btn.innerHTML = '📚 Catalogar';
+    btn.disabled = false;
+  }
+}
+
+// ── SAVE TEXT ITEMS ───────────────────────────────────
+async function saveText() {
+  if (!cfg.notionToken) { openSettings(); return; }
+  if (!items.length) return;
+
+  const btn = document.querySelector('#interp-results .btn-primary');
+  btn.innerHTML = '<span class="spin"></span> Desant…';
+  btn.disabled = true;
+
+  try {
+    const dateStr = todayISO();
+    const m = meal.text;
+
+    toast('Verificant Resum Diari…');
+    const resumId = await ensureResum(dateStr);
+    toast('Creant àpat…');
+    const apatId = await createApat(dateStr, m, resumId);
+
+    for (const it of items) {
+      const per100 = {
+        kcal:  it.quantitat_g ? Math.round(it.kcal / it.quantitat_g * 100) : it.kcal,
+        prot:  it.quantitat_g ? Math.round(it.proteina_g / it.quantitat_g * 100 * 10) / 10 : it.proteina_g,
+        greix: it.quantitat_g ? Math.round(it.greix_g / it.quantitat_g * 100 * 10) / 10 : it.greix_g,
+        carbs: it.quantitat_g ? Math.round(it.carbs_g / it.quantitat_g * 100 * 10) / 10 : it.carbs_g,
+        fibra: it.quantitat_g ? Math.round((it.fibra_g||0) / it.quantitat_g * 100 * 10) / 10 : 0,
+      };
+      toast(`Afegint ${it.nom}…`);
+      const { id: alimentId, per100: actualPer100 } = await ensureAliment(it.nom, per100);
+      // Calcular macros a partir dels valors reals de la BD (no estimats per Claude)
+      const qty = it.quantitat_g;
+      const macros = {
+        kcal:  Math.round(actualPer100.kcal  * qty / 100),
+        prot:  Math.round(actualPer100.prot  * qty / 100 * 10) / 10,
+        greix: Math.round(actualPer100.greix * qty / 100 * 10) / 10,
+        carbs: Math.round(actualPer100.carbs * qty / 100 * 10) / 10,
+        fibra: Math.round(actualPer100.fibra * qty / 100 * 10) / 10,
+      };
+      await createLinia(apatId, alimentId, `${it.nom} ${qty}g`, qty, macros);
+    }
+
+    toast(`✅ ${items.length} aliment(s) afegit(s)!`, 'ok');
+    _platPorcioFactor = 1; // reset ració
+    document.getElementById('nl-input').value = '';
+    clearText();
+  } catch(e) {
+    toast('❌ ' + e.message, 'err');
+  } finally {
+    btn.innerHTML = '➕ Afegir tot a Notion';
+    btn.disabled = false;
+  }
+}
+
+// ── MACRO DETAIL MODAL ────────────────────────────────
+const _macroMeta = {
+  prot:  { label: 'Proteïna',     color: 'var(--blue)',   field: 'Prot (g)',   emoji: '💪' },
+  greix: { label: 'Greix',        color: 'var(--yellow)', field: 'Greix (g)',  emoji: '🧈' },
+  carbs: { label: 'Carbohidrats', color: 'var(--green)',  field: 'Carbs (g)',  emoji: '🍞' },
+  fibra: { label: 'Fibra',        color: 'var(--purple)', field: 'Fibra (g)',  emoji: '🥦' },
+};
+
+function closeMacroModal() {
+  document.getElementById('m-macro').classList.remove('open');
+}
+
+async function showMacroModal(macro) {
+  const meta = _macroMeta[macro];
+  if (!meta) return;
+
+  const apatIds = Object.keys(_todayApatMap);
+  if (!apatIds.length) {
+    toast('Actualitza les dades primer', 'err');
+    return;
+  }
+
+  // Open modal in loading state
+  document.getElementById('m-macro-title').textContent = meta.emoji + ' ' + meta.label + ' — detall d\'avui';
+  document.getElementById('m-macro-loading').style.display = 'block';
+  document.getElementById('m-macro-list').style.display = 'none';
+  document.getElementById('m-macro').classList.add('open');
+
+  try {
+    // Fetch linies for all today's apats in parallel
+    const allLinies = [];
+    const rawPages = [];
+    await Promise.all(apatIds.map(async (apatId) => {
+      const res = await nQueryFull(DB_LINIES, {
+        filter: { property: 'Àpat', relation: { contains: apatId } }
+      });
+      const tipus = _todayApatMap[apatId].tipus;
+      for (const pg of (res.results || [])) {
+        rawPages.push({ pg, tipus });
+      }
+    }));
+
+    // Recull IDs d'Aliment únics i fetch en paral·lel
+    const alimentIds = [];
+    for (const { pg } of rawPages) {
+      const relId = pg.properties['Aliment']?.relation?.[0]?.id
+                 || pg.properties['Recepta']?.relation?.[0]?.id;
+      if (relId && !alimentIds.includes(relId)) alimentIds.push(relId);
+    }
+    const alimentPgs = await Promise.all(alimentIds.map(id => nGetPage(id).catch(() => null)));
+    const nomById = {};
+    for (const ap of alimentPgs) {
+      if (!ap) continue;
+      const n = ap.properties?.['Nom']?.title?.[0]?.plain_text
+             || ap.properties?.['Name']?.title?.[0]?.plain_text;
+      if (n) nomById[ap.id] = n;
+    }
+
+    for (const { pg, tipus } of rawPages) {
+      const pp = pg.properties;
+      const relId = pp['Aliment']?.relation?.[0]?.id || pp['Recepta']?.relation?.[0]?.id;
+      const nomCataleg = relId ? nomById[relId] : null;
+      const rawNom2 = pp['Descripció']?.title?.[0]?.plain_text || '—';
+      const nomFallback = rawNom2.replace(/\s*\(?\d+(?:[.,]\d+)?\s*g\)?\.?\s*$/i, '').trim() || rawNom2;
+      allLinies.push({
+        nom:       nomCataleg || nomFallback,
+        prot:      pp['Prot (g)']?.number  || 0,
+        greix:     pp['Greix (g)']?.number || 0,
+        carbs:     pp['Carbs (g)']?.number || 0,
+        fibra:     pp['Fibra (g)']?.number || 0,
+        kcal:      pp['kcal']?.number      || 0,
+        qty:       pp['Quantitat (g)']?.number || 0,
+        tipus,
+        notionUrl: 'https://www.notion.so/' + pg.id.replace(/-/g, ''),
+      });
+    }
+
+    // Sort descending by selected macro
+    allLinies.sort((a, b) => b[macro] - a[macro]);
+
+    const total = allLinies.reduce((s, l) => s + l[macro], 0);
+    const mealIcons = { Esmorzar:'☀️', Dinar:'🍽️', Berenar:'🍎', Sopar:'🌙', Altres:'🍴' };
+
+    const rows = allLinies.map(l => {
+      const val = l[macro];
+      const pct = total > 0 ? Math.round(val / total * 100) : 0;
+      const icon = mealIcons[l.tipus] || '🍴';
+      return '<div class="macro-row">'
+        + '<div style="flex:1;min-width:0">'
+        +   '<div class="macro-row-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + l.nom + '</div>'
+        +   '<div class="macro-row-meal">' + icon + ' ' + l.tipus + ' &nbsp;·&nbsp; ' + Math.round(l.qty) + 'g &nbsp;·&nbsp; ' + Math.round(l.kcal) + ' kcal</div>'
+        + '</div>'
+        + '<div style="text-align:right;flex-shrink:0">'
+        +   '<div class="macro-row-val" style="color:' + meta.color + '">' + val.toFixed(1) + 'g</div>'
+        +   '<div class="macro-row-kcal">' + pct + '%</div>'
+        + '</div>'
+        + '<a class="macro-row-link" href="' + l.notionUrl + '" target="_blank" onclick="event.stopPropagation()">↗</a>'
+        + '</div>';
+    });
+
+    const listEl = document.getElementById('m-macro-list');
+    if (!rows.length) {
+      listEl.innerHTML = '<div class="empty"><div class="empty-txt">Cap línia trobada</div></div>';
+    } else {
+      const totRow = '<div style="display:flex;justify-content:space-between;padding:10px 0 14px;font-weight:700;border-bottom:2px solid var(--border);margin-bottom:4px">'
+        + '<span>TOTAL</span>'
+        + '<span style="color:' + meta.color + '">' + total.toFixed(1) + 'g</span>'
+        + '</div>';
+      listEl.innerHTML = totRow + rows.join('');
+    }
+
+    document.getElementById('m-macro-loading').style.display = 'none';
+    listEl.style.display = 'block';
+  } catch(e) {
+    document.getElementById('m-macro-loading').textContent = '❌ Error: ' + e.message;
+  }
+}
+
+// ── LOAD TODAY ────────────────────────────────────────
+async function loadToday() {
+  if (!cfg.notionToken) { openSettings(); return; }
+
+  document.getElementById('today-entries').innerHTML =
+    '<div class="empty"><div class="empty-icon">⏳</div><div class="empty-txt">Carregant…</div></div>';
+
+  try {
+    const dateStr = todayISO();
+
+    // 1. Get Resum Diari (objectives)
+    const resumRes = await nQuery(DB_RESUM, { property: 'Data', date: { equals: dateStr } });
+    let objKcal = 1658, objProt = 128, objGreix = 55, objCarbs = 162, objFibra = 25;
+    if (resumRes.results?.length) {
+      const p = resumRes.results[0].properties;
+      objKcal  = p['Kcal objectiu']?.formula?.number  || p['Kcal']?.number  || objKcal;
+      objProt  = p['Prot objectiu']?.formula?.number  || p['Prot']?.number  || objProt;
+      objGreix = p['Greix objectiu']?.formula?.number || p['Greix']?.number || objGreix;
+      objCarbs = p['Carbs objectiu']?.formula?.number || p['Carbs']?.number || objCarbs;
+    }
+    todayObjKcal = objKcal; // global for exercise adjustment
+    loadExercici(dateStr);  // load exercise from Notion for today
+
+    // 1b+1c. Pes real i objectiu en paral·lel → diff quan tots dos estan disponibles
+    Promise.all([
+      nQueryFull(DB_PES, {
+        sorts: [{ property: 'Data registre', direction: 'descending' }],
+        page_size: 1
+      }).catch(() => null),
+      nGetPage(CONFIG_ID).catch(() => null),
+    ]).then(([pesRes, cfgPage]) => {
+      const pesReal = pesRes?.results?.[0]?.properties?.['Pes (kg)']?.number ?? null;
+      const pesObj  = cfgPage?.properties?.['Pes objectiu']?.number ?? null;
+      if (pesReal != null) {
+        document.getElementById('t-pes-real').textContent = pesReal.toFixed(1) + ' kg';
+        userPesKg = pesReal;
+      }
+      if (pesObj != null) {
+        document.getElementById('t-pes-obj').textContent = pesObj.toFixed(1) + ' kg';
+      }
+      if (pesReal != null && pesObj != null) {
+        const diff = pesReal - pesObj;
+        document.getElementById('t-pes-diff').textContent = diff.toFixed(1) + ' kg';
+        document.getElementById('t-pes-diff').style.color = diff <= 0 ? 'var(--green)' : 'var(--accent)';
+      }
+    });
+
+    // 1d. Weight chart is now in the Pes tab
+
+    // 2. Get Àpats for today
+    const apatsRes = await nQuery(DB_APATS, { property: 'Data', date: { equals: dateStr } });
+    let totKcal = 0, totProt = 0, totGreix = 0, totCarbs = 0, totFibra = 0;
+    const groups = {};
+    const mealOrder = ['Esmorzar','Dinar','Berenar','Sopar'];
+
+    _todayApatMap = {};
+    for (const apat of (apatsRes.results || [])) {
+      const p = apat.properties;
+      const tipus = p['Categoria']?.select?.name || 'Altres';
+      // Try formula properties first, then rollup, then 0
+      const kcal  = p['f_kcal']?.formula?.number  || p['Kcal']?.rollup?.number  || 0;
+      const prot  = p['f_prot']?.formula?.number  || p['Prot']?.rollup?.number  || 0;
+      const greix = p['f_greix']?.formula?.number || p['Greix']?.rollup?.number || 0;
+      const carbs = p['f_carbs']?.formula?.number || p['Carbs']?.rollup?.number || 0;
+      const fibra = p['f_fibra']?.formula?.number || p['Fibra']?.rollup?.number || 0;
+      const nom   = p['Nom']?.title?.[0]?.plain_text || tipus;
+
+      totKcal += kcal; totProt += prot; totGreix += greix;
+      totCarbs += carbs; totFibra += fibra;
+
+      if (!groups[tipus]) groups[tipus] = [];
+      const notionUrl = 'https://www.notion.so/' + apat.id.replace(/-/g, '');
+      _todayApatMap[apat.id] = { tipus, notionUrl };
+      groups[tipus].push({ apatId: apat.id, nom, kcal, notionUrl });
+    }
+
+    // 3. Update UI
+    const rnd = (v, d=1) => Math.round(v * 10**d) / 10**d;
+    updateKcalRing(totKcal, objKcal, ringEx); // ringEx already set by loadExercici
+
+    document.getElementById('t-prot').textContent = rnd(totProt);
+    document.getElementById('t-prot-obj').textContent = `/ ${rnd(objProt,0)}g`;
+    document.getElementById('t-greix').textContent = rnd(totGreix);
+    document.getElementById('t-greix-obj').textContent = `/ ${rnd(objGreix,0)}g`;
+    document.getElementById('t-carbs').textContent = rnd(totCarbs);
+    document.getElementById('t-carbs-obj').textContent = `/ ${rnd(objCarbs,0)}g`;
+    document.getElementById('t-fibra').textContent = rnd(totFibra);
+    document.getElementById('t-fibra-obj').textContent = `/ ${objFibra}g`;
+
+    const setPct = (id, v, max) =>
+      document.getElementById(id).style.width = Math.min(v / max * 100, 100) + '%';
+    setPct('bar-prot', totProt, objProt);
+    setPct('bar-greix', totGreix, objGreix);
+    setPct('bar-carbs', totCarbs, objCarbs);
+    setPct('bar-fibra', totFibra, objFibra);
+
+    // 4. Meal groups
+    const icons = { Esmorzar:'☀️', Dinar:'🍽️', Berenar:'🍎', Sopar:'🌙' };
+    const mealStyle = {
+      Esmorzar: { bg:'#fef3c7', accent:'#92400e', border:'rgba(245,158,11,.25)' },
+      Dinar:    { bg:'#ffedd5', accent:'#9a3412', border:'rgba(249,115,22,.25)' },
+      Berenar:  { bg:'#dcfce7', accent:'#14532d', border:'rgba(34,197,94,.25)'  },
+      Sopar:    { bg:'#dbeafe', accent:'#1e3a8a', border:'rgba(59,130,246,.25)' },
+    };
+    const el = document.getElementById('today-entries');
+
+    if (!Object.keys(groups).length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">🍽️</div><div class="empty-txt">Cap àpat registrat avui</div></div>';
+      return;
+    }
+
+    el.innerHTML = '';
+    [...mealOrder, ...Object.keys(groups).filter(k => !mealOrder.includes(k))]
+      .filter(k => groups[k])
+      .forEach(m => {
+        const totalKcal = Math.round(groups[m].reduce((s, e) => s + e.kcal, 0));
+        const style = mealStyle[m] || { bg:'var(--bg2)', accent:'var(--text2)', border:'var(--border)' };
+        const g = document.createElement('div');
+        g.className = 'mg open';
+        g.style.borderColor = style.border;
+        g.innerHTML =
+          `<div class="mg-header" style="background:${style.bg}" onclick="this.parentElement.classList.toggle('open')">
+            <div class="mg-header-left">
+              <span class="mg-meal-icon">${icons[m] || '🍽️'}</span>
+              <span class="mg-meal-name" style="color:${style.accent}">${m}</span>
+              <span class="mg-meal-kcal" style="color:${style.accent}">${totalKcal} kcal</span>
+            </div>
+            <span class="mg-chevron">▼</span>
+          </div>
+          <div class="mg-body" style="border-top-color:${style.border}">` +
+          groups[m].map(e =>
+            `<div id="linies-${e.apatId.replace(/-/g,'')}" style="color:var(--text3);font-size:12px;padding:4px 0 2px">⏳</div>`
+          ).join('') +
+          `</div>`;
+        el.appendChild(g);
+        groups[m].forEach(e => loadLiniesApat(e.apatId));
+      });
+
+  } catch(e) {
+    document.getElementById('today-entries').innerHTML =
+      `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-txt">Error: ${e.message}</div></div>`;
+  }
+}
+
+// ── LINIES D'ÀPAT (carrega i esborra) ────────────────
+async function nArchive(pageId) {
+  return nCall('/v1/pages/' + pageId, 'PATCH', { archived: true });
+}
+
+async function loadLiniesApat(apatId) {
+  const elId = 'linies-' + apatId.replace(/-/g, '');
+  const el = document.getElementById(elId);
+  if (!el) return;
+  try {
+    const res = await nQueryFull(DB_LINIES, {
+      filter: { property: 'Àpat', relation: { contains: apatId } }
+    });
+
+    // Recull IDs d'Aliment i Recepta únics per fer-les en paral·lel
+    const alimentIds = [];
+    for (const pg of (res.results || [])) {
+      const rel = pg.properties['Aliment']?.relation?.[0]?.id
+               || pg.properties['Recepta']?.relation?.[0]?.id;
+      if (rel && !alimentIds.includes(rel)) alimentIds.push(rel);
+    }
+    // Fetch de totes les pàgines d'aliment en paral·lel
+    const alimentPages = await Promise.all(alimentIds.map(id => nGetPage(id).catch(() => null)));
+    const nomById = {};
+    for (const pg of alimentPages) {
+      if (!pg) continue;
+      const nom = pg.properties?.['Nom']?.title?.[0]?.plain_text
+               || pg.properties?.['Name']?.title?.[0]?.plain_text;
+      if (nom) nomById[pg.id] = nom;
+    }
+
+    const linies = (res.results || []).map(pg => {
+      const pp = pg.properties;
+      // Prioritza nom de l'Aliment/Recepta del catàleg; fallback a Descripció
+      const relId = pp['Aliment']?.relation?.[0]?.id || pp['Recepta']?.relation?.[0]?.id;
+      const nomCataleg = relId ? nomById[relId] : null;
+      const rawNom = pp['Descripció']?.title?.[0]?.plain_text || '—';
+      const nomFallback = rawNom.replace(/\s*\(?\d+(?:[.,]\d+)?\s*g\)?\.?\s*$/i, '').trim() || rawNom;
+      return {
+        id:        pg.id,
+        nom:       nomCataleg || nomFallback,
+        alimentId: relId || '',
+        kcal:      pp['kcal']?.number       || 0,
+        prot:      pp['Prot (g)']?.number   || 0,
+        greix:     pp['Greix (g)']?.number  || 0,
+        carbs:     pp['Carbs (g)']?.number  || 0,
+        fibra:     pp['Fibra (g)']?.number  || 0,
+        qty:       pp['Quantitat (g)']?.number || 0,
+        url:       'https://www.notion.so/' + pg.id.replace(/-/g, ''),
+      };
+    });
+    if (!linies.length) { el.innerHTML = ''; return; }
+    linies.sort((a, b) => a.nom.localeCompare(b.nom, 'ca'));
+    el.innerHTML = linies.map(l => {
+      const lid = l.id.replace(/-/g, '');
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'
+      + '<div style="flex:1;min-width:0">'
+      +   '<div class="entry-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + l.nom + '</div>'
+      +   '<div id="qty-sub-' + lid + '" style="font-size:11px;color:var(--text2);margin-top:2px">'
+      +     '<span onclick="startEditQty(\'' + l.id + '\',' + l.qty + ',' + l.kcal + ',' + l.prot + ',' + l.greix + ',' + l.carbs + ',' + l.fibra + ',\'' + elId + '\')" '
+      +       'style="cursor:pointer;border-bottom:1px dotted var(--blue);color:var(--blue)">' + Math.round(l.qty) + 'g</span>'
+      +     ' · ' + Math.round(l.kcal) + ' kcal'
+      +   '</div>'
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:10px;flex-shrink:0">'
+      +   '<a href="' + l.url + '" target="_blank" style="font-size:13px;opacity:0.35;color:var(--text)">↗</a>'
+      +   '<button onclick="obrirCopiaLinia(\'' + l.id + '\',\'' + l.nom + '\',' + l.qty + ',' + l.kcal + ',' + l.prot + ',' + l.greix + ',' + l.carbs + ',' + l.fibra + ',\'' + (l.alimentId||'') + '\')" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.5;padding:2px 4px" title="Copiar a un altre àpat">📋</button>'
+      +   '<button onclick="deleteLinia(\'' + l.id + '\',\'' + elId + '\')" style="background:none;border:none;cursor:pointer;font-size:15px;color:var(--red);opacity:0.55;padding:2px 4px" title="Esborrar línia">🗑</button>'
+      + '</div>'
+      + '</div>';
+    }).join('');
+  } catch(e) {
+    if (el) el.innerHTML = '';
+  }
+}
+
+function startEditQty(liniaId, qty, kcal, prot, greix, carbs, fibra, elId) {
+  const lid = liniaId.replace(/-/g, '');
+  const sub = document.getElementById('qty-sub-' + lid);
+  if (!sub) return;
+  sub.innerHTML =
+    '<input type="number" id="eq-' + lid + '" value="' + qty + '" min="1" max="5000" '
+    + 'style="width:58px;font-size:12px;padding:2px 5px;border:1.5px solid var(--blue);border-radius:6px;text-align:center">'
+    + 'g '
+    + '<button onclick="saveEditQty(\'' + liniaId + '\',' + qty + ',' + kcal + ',' + prot + ',' + greix + ',' + carbs + ',' + fibra + ',\'' + elId + '\')" '
+    + 'style="background:var(--green);color:white;border:none;border-radius:6px;padding:2px 8px;font-size:12px;cursor:pointer;margin-left:4px">✓</button> '
+    + '<button onclick="cancelEditQty(\'' + lid + '\',' + qty + ',' + kcal + ')" '
+    + 'style="background:none;border:none;color:var(--text3);font-size:14px;cursor:pointer;padding:2px">✕</button>';
+  setTimeout(() => {
+    const inp = document.getElementById('eq-' + lid);
+    if (inp) { inp.focus(); inp.select(); }
+  }, 30);
+}
+
+function cancelEditQty(lid, qty, kcal) {
+  const sub = document.getElementById('qty-sub-' + lid);
+  if (!sub) return;
+  // Restaura l'element original — no tenim l.id aquí, fem servir lid
+  sub.innerHTML = '<span style="color:var(--text3)">' + Math.round(qty) + 'g · ' + Math.round(kcal) + ' kcal</span>';
+}
+
+async function saveEditQty(liniaId, oldQty, oldKcal, oldProt, oldGreix, oldCarbs, oldFibra, elId) {
+  const lid = liniaId.replace(/-/g, '');
+  const inp = document.getElementById('eq-' + lid);
+  if (!inp) return;
+  const newQty = parseFloat(inp.value);
+  if (!newQty || newQty <= 0) { toast('Quantitat no vàlida', 'err'); return; }
+  if (newQty === oldQty) { cancelEditQty(lid, oldQty, oldKcal); return; }
+
+  // Deriva valors per 100g a partir dels valors actuals
+  const f = oldQty > 0 ? newQty / oldQty : 1;
+  const newKcal  = Math.round(oldKcal  * f);
+  const newProt  = Math.round(oldProt  * f * 10) / 10;
+  const newGreix = Math.round(oldGreix * f * 10) / 10;
+  const newCarbs = Math.round(oldCarbs * f * 10) / 10;
+  const newFibra = Math.round(oldFibra * f * 10) / 10;
+
+  const sub = document.getElementById('qty-sub-' + lid);
+  if (sub) sub.innerHTML = '<span style="color:var(--text3)">⏳ Desant…</span>';
+
+  try {
+    await nPatch(liniaId, {
+      'Quantitat (g)': { number: newQty   },
+      'kcal':          { number: newKcal  },
+      'Prot (g)':      { number: newProt  },
+      'Greix (g)':     { number: newGreix },
+      'Carbs (g)':     { number: newCarbs },
+      'Fibra (g)':     { number: newFibra },
+    });
+    toast('✅ Quantitat actualitzada', 'ok');
+    // Refresca la secció
+    if (elId.startsWith('lin-hist')) {
+      // Historial de línies: actualitza només aquest element al DOM (evita re-query a Notion)
+      const subUpd = document.getElementById('qty-sub-' + lid);
+      if (subUpd) {
+        subUpd.innerHTML =
+          '<span onclick="startEditQty(\'' + liniaId + '\',' + newQty + ',' + newKcal + ',' + newProt + ',' + newGreix + ',' + newCarbs + ',' + newFibra + ',\'' + elId + '\')" '
+          + 'style="cursor:pointer;border-bottom:1px dotted var(--blue);color:var(--blue);font-weight:600">' + Math.round(newQty) + 'g</span>'
+          + ' · ' + Math.round(newKcal) + ' kcal';
+      }
+    } else {
+      const apatIdFlat = elId.replace('linies-', '');
+      const apatId = apatIdFlat.replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5');
+      await loadLiniesApat(apatId);
+      loadToday();
+    }
+  } catch(e) {
+    toast('❌ ' + e.message, 'err');
+    if (sub) sub.innerHTML = '<span style="color:var(--red)">Error</span>';
+  }
+}
+
+async function deleteLinia(liniaId, parentElId) {
+  if (!confirm('Esborrar aquesta línia de l\'àpat?')) return;
+  try {
+    await nArchive(liniaId);
+    toast('🗑 Línia esborrada', 'ok');
+    // Refresca la secció del àpat
+    const el = document.getElementById(parentElId);
+    if (el) el.innerHTML = '<span style="color:var(--text3);font-size:12px">⏳</span>';
+    // Extreu apatId del parentElId i torna a carregar
+    const apatIdFlat = parentElId.replace('linies-', '');
+    const apatId = apatIdFlat.replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5');
+    await loadLiniesApat(apatId);
+    // Refresca totals
+    loadToday();
+  } catch(e) {
+    toast('❌ ' + e.message, 'err');
+  }
+}
+
+// ── PES PAGE ─────────────────────────────────────────
+async function loadPesPage() {
+  // Inicialitza data input amb avui
+  const di = document.getElementById('pes-data-input');
+  if (di && !di.value) di.value = todayISO();
+  // Carrega gràfic i historial
+  loadPesChart(pesChartDays);
+  loadPesHistory();
+}
+
+async function savePes() {
+  if (!cfg.notionToken) { openSettings(); return; }
+  const pesVal  = parseFloat(document.getElementById('pes-kg-input').value);
+  const dateVal = document.getElementById('pes-data-input').value;
+  if (isNaN(pesVal) || !dateVal) { toast('Omple el pes i la data', 'err'); return; }
+
+  const btn = document.getElementById('btn-save-pes');
+  btn.disabled = true; btn.textContent = '⏳ Desant…';
+  try {
+    await nCreate({
+      parent: { database_id: DB_PES },
+      properties: {
+        'Pes (kg)':       { number: pesVal },
+        'Data registre':  { date: { start: dateVal } },
+      }
+    });
+    toast(`✅ ${pesVal.toFixed(1)} kg desat`, 'ok');
+    document.getElementById('pes-kg-input').value = '';
+    // Actualitza el bloc Avui si és avui
+    if (dateVal === todayISO()) {
+      document.getElementById('t-pes-real').textContent = pesVal.toFixed(1) + ' kg';
+      userPesKg = pesVal;
+    }
+    loadPesChart(pesChartDays);
+    loadPesHistory();
+  } catch(e) {
+    toast('❌ ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Desar pes';
+  }
+}
+
+async function loadPesHistory() {
+  const listEl = document.getElementById('pes-history-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="empty"><div class="empty-txt">⏳</div></div>';
+  try {
+    const res = await nQueryFull(DB_PES, {
+      sorts: [{ property: 'Data registre', direction: 'descending' }],
+      page_size: 10
+    });
+    const entries = (res.results || []).map(r => ({
+      date: r.properties['Data registre']?.date?.start,
+      pes:  r.properties['Pes (kg)']?.number
+    })).filter(e => e.date && e.pes != null);
+
+    if (!entries.length) {
+      listEl.innerHTML = '<div class="empty"><div class="empty-txt">Cap registre de pes</div></div>';
+      return;
+    }
+    const wd = ['Dg','Dl','Dm','Dx','Dj','Dv','Ds'];
+    const rows = [];
+    for (let i = 0; i < entries.length; i++) {
+      const e = entries[i];
+      const d = new Date(e.date + 'T12:00:00');
+      const dateLbl = wd[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear();
+      let diffHtml = '';
+      if (i < entries.length - 1) {
+        const dif = e.pes - entries[i+1].pes;
+        const col  = dif <= 0 ? 'var(--green)' : 'var(--red)';
+        const sign = dif > 0 ? '+' : '';
+        diffHtml = '<span style="color:' + col + ';font-size:11px;font-weight:600">' + sign + dif.toFixed(1) + ' kg</span>';
+      }
+      rows.push('<div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:0 12px;padding:9px 0;border-bottom:1px solid var(--border)">'
+        + '<span style="color:var(--text2);font-size:13px">' + dateLbl + '</span>'
+        + '<span style="font-size:16px;font-weight:700;text-align:right">' + e.pes.toFixed(1) + ' kg</span>'
+        + '<span style="min-width:52px;text-align:right">' + diffHtml + '</span>'
+        + '</div>');
+    }
+    listEl.innerHTML = rows.join('');
+    /*
+      const diffTxt = diff != null ? `<span style="color:${diff <= 0 ? 'var(--green)' : 'var(--red)';font-size:11px;font-weight:600">${diff > 0 ? '+' : ''}${diff.toFixed(1)} kg</span>` : '';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text2);font-size:13px">${wd[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}</span>
+        <span style="font-size:16px;font-weight:700">${e.pes.toFixed(1)} kg</span>
+        ${diffTxt}
+      </div>`;
+    */
+  } catch(e) {
+    listEl.innerHTML = '<div class="empty"><div class="empty-txt">Error: ' + e.message + '</div></div>';
+  }
+}
+
+// ── PES CHART ────────────────────────────────────────
+let pesChartDays = 30;
+async function loadPesChart(days) {
+  pesChartDays = days || pesChartDays;
+  // Update button styles
+  [14, 30, 90].forEach(d => {
+    const b = document.getElementById(`pes-btn-${d}`);
+    if (b) b.className = `btn btn-sm ${d === pesChartDays ? 'btn-primary' : 'btn-ghost'}`;
+  });
+
+  const svgEl = document.getElementById('pes-chart-svg');
+  svgEl.innerHTML = '<div class="empty" style="padding:10px 0"><div class="empty-txt">⏳</div></div>';
+
+  try {
+    // Compute date range: last X days relative to today
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - pesChartDays);
+    const startStr = startDate.toISOString().split('T')[0];
+
+    const res = await nQueryFull(DB_PES, {
+      filter: { property: 'Data registre', date: { on_or_after: startStr } },
+      sorts:  [{ property: 'Data registre', direction: 'ascending' }],
+      page_size: 100
+    });
+
+    const entries = (res.results || []).map(r => ({
+      date: r.properties['Data registre']?.date?.start,
+      pes:  r.properties['Pes (kg)']?.number
+    })).filter(e => e.date && e.pes != null);
+
+    if (!entries.length) {
+      svgEl.innerHTML = '<div class="empty" style="padding:10px 0"><div class="empty-txt">Sense dades de pes en aquest període</div></div>';
+      return;
+    }
+
+    // Get objectiu
+    let pesObj = null;
+    try {
+      const cfg = await nGetPage(CONFIG_ID);
+      pesObj = cfg?.properties?.['Pes objectiu']?.number;
+    } catch(_) {}
+
+    // Chart dimensions
+    const W = svgEl.offsetWidth || 320;
+    const H = 110;
+    const pad = { t: 10, r: 28, b: 22, l: 32 };
+    const chartW = W - pad.l - pad.r;
+    const chartH = H - pad.t - pad.b;
+
+    const minPes = Math.min(...entries.map(e => e.pes), pesObj || Infinity) - 0.5;
+    const maxPes = Math.max(...entries.map(e => e.pes), pesObj || -Infinity) + 0.5;
+    const range  = maxPes - minPes || 1;
+
+    const xScale = i => pad.l + (entries.length > 1 ? i / (entries.length - 1) : 0.5) * chartW;
+    const yScale = v => pad.t + (1 - (v - minPes) / range) * chartH;
+
+    // Build SVG
+    let svg = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+
+    // Objective line
+    if (pesObj != null) {
+      const oy = yScale(pesObj);
+      svg += `<line x1="${pad.l}" y1="${oy}" x2="${W - pad.r}" y2="${oy}" stroke="rgba(21,128,61,0.5)" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+      svg += `<text x="${W - pad.r - 2}" y="${oy - 3}" font-size="9" fill="rgba(21,128,61,0.8)" text-anchor="end">${pesObj}</text>`;
+    }
+
+    // Y axis labels
+    svg += `<text x="${pad.l - 3}" y="${pad.t + 5}" font-size="9" fill="rgba(28,20,8,0.35)" text-anchor="end">${maxPes.toFixed(1)}</text>`;
+    svg += `<text x="${pad.l - 3}" y="${pad.t + chartH + 4}" font-size="9" fill="rgba(28,20,8,0.35)" text-anchor="end">${minPes.toFixed(1)}</text>`;
+
+    // Area fill
+    const pts = entries.map((e, i) => `${xScale(i)},${yScale(e.pes)}`).join(' ');
+    const areaPath = `M ${xScale(0)},${pad.t + chartH} L ${entries.map((e,i) => `${xScale(i)},${yScale(e.pes)}`).join(' L ')} L ${xScale(entries.length-1)},${pad.t + chartH} Z`;
+    svg += `<path d="${areaPath}" fill="rgba(194,68,15,0.1)"/>`;
+
+    // Line
+    const linePath = `M ${entries.map((e,i) => `${xScale(i)},${yScale(e.pes)}`).join(' L ')}`;
+    svg += `<path d="${linePath}" fill="none" stroke="rgba(194,68,15,0.8)" stroke-width="2" stroke-linejoin="round"/>`;
+
+    // Dots + date labels for first, last, and every ~7 days
+    entries.forEach((e, i) => {
+      const x = xScale(i), y = yScale(e.pes);
+      const isKey = i === 0 || i === entries.length - 1 || i % Math.ceil(entries.length / 5) === 0;
+      svg += `<circle cx="${x}" cy="${y}" r="${isKey ? 3.5 : 2}" fill="${i === entries.length - 1 ? 'rgb(194,68,15)' : 'rgba(194,68,15,0.6)'}"/>`;
+      if (isKey) {
+        const d = new Date(e.date + 'T12:00:00');
+        const lbl = `${d.getDate()}/${d.getMonth()+1}`;
+        svg += `<text x="${x}" y="${H - 3}" font-size="8.5" fill="rgba(28,20,8,0.45)" text-anchor="middle">${lbl}</text>`;
+        if (i === entries.length - 1) {
+          svg += `<text x="${x}" y="${y - 7}" font-size="9.5" fill="rgb(194,68,15)" text-anchor="middle" font-weight="bold">${e.pes.toFixed(1)}</text>`;
+        }
+      }
+    });
+
+    svg += '</svg>';
+    svgEl.innerHTML = svg;
+
+    // Legend
+    document.getElementById('pes-min-lbl').textContent =
+      `${new Date(entries[0].date + 'T12:00:00').toLocaleDateString('ca-ES', {day:'numeric',month:'short'})}`;
+    document.getElementById('pes-max-lbl').textContent =
+      `${new Date(entries[entries.length-1].date + 'T12:00:00').toLocaleDateString('ca-ES', {day:'numeric',month:'short'})} · ${entries[entries.length-1].pes.toFixed(1)} kg`;
+
+  } catch(e) {
+    svgEl.innerHTML = `<div class="empty" style="padding:10px 0"><div class="empty-txt">Error: ${e.message}</div></div>`;
+  }
+}
+
+// ── EXERCICI ─────────────────────────────────────────
+let exAct = 'Caminar', exMet = 3.5;
+let userPesKg = 80;       // updated when weight loads
+let todayObjKcal = 1658;  // updated when loadToday runs
+let exDateStr = null;     // date currently loaded
+let todayExPassos = 0;    // passos acumulats dels exercicis registrats
+
+// Ring globals
+let ringConsumed = 0, ringObj = 1658, ringEx = 0;
+
+function updateKcalRing(consumed, obj, ex) {
+  if (consumed !== undefined) ringConsumed = consumed;
+  if (obj      !== undefined) ringObj      = obj;
+  if (ex       !== undefined) ringEx       = ex;
+
+  const circ  = 408;
+  const total = ringObj + ringEx || 1;
+  const exceeded = ringConsumed > total;
+  const restant  = Math.max(0, Math.round(total - ringConsumed));
+
+  // Si s'ha excedit el total → anell en blanc (sense arcs)
+  const redLen   = exceeded ? 0 : Math.min(ringConsumed / total * circ, circ);
+  const greenLen = exceeded ? 0 : Math.min(ringEx / total * circ, Math.max(0, circ - redLen));
+
+  // Red arc (consumit)
+  const ringEl = document.getElementById('kcal-ring');
+  if (ringEl) {
+    ringEl.style.strokeDasharray  = `${redLen} ${circ}`;
+    ringEl.style.strokeDashoffset = '0';
+  }
+
+  // Green arc (exercici)
+  const exRingEl = document.getElementById('ex-ring');
+  if (exRingEl) {
+    exRingEl.style.strokeDasharray  = `${greenLen} ${circ}`;
+    exRingEl.style.strokeDashoffset = `-${redLen}`;
+  }
+
+  // Centre gran: consumit
+  const kcalEl = document.getElementById('t-kcal');
+  if (kcalEl) kcalEl.textContent = Math.round(ringConsumed);
+
+  // Centre petit: net = consumit − exercici
+  const net = Math.round(ringConsumed - ringEx);
+  const netEl = document.getElementById('t-net-kcal');
+  if (netEl) {
+    netEl.textContent = ringEx > 0 ? `net ${net} kcal` : '';
+  }
+
+  // Suma objectiu (línia)
+  const objEl = document.getElementById('t-kcal-obj');
+  if (objEl) objEl.textContent = Math.round(ringObj) + ' kcal';
+  const objExEl = document.getElementById('t-kcal-obj-ex');
+  if (objExEl) objExEl.textContent = ringEx > 0 ? ` + ${Math.round(ringEx)} ex` : '';
+
+  // Oval: total objectiu
+  const badge = document.getElementById('t-deficit');
+  if (badge) {
+    badge.textContent = `🎯 ${Math.round(total)} kcal objectiu`;
+    badge.className = 'deficit-badge';
+  }
+
+  // Restant prominent (sota oval)
+  const remaining = Math.round(total - ringConsumed);
+  const restantEl = document.getElementById('t-restant-num');
+  if (restantEl) {
+    restantEl.textContent = remaining >= 0 ? `+${remaining}` : `${remaining}`;
+    restantEl.style.color = remaining >= 0 ? 'var(--green)' : 'var(--red)';
+  }
+
+  // Info petita sota
+  const consumedEl = document.getElementById('t-consumed-info');
+  if (consumedEl) {
+    const exPart = ringEx > 0 ? ` · 🏃 ${Math.round(ringEx)} ex` : '';
+    consumedEl.textContent = `🍽️ ${Math.round(ringConsumed)} consumides${exPart}`;
+  }
+}
+
+const actIcons = { Caminar:'🚶', Córrer:'🏃', Bici:'🚴', Aquagym:'🌊', Passos:'👟', Altre:'⚡' };
+
+function selEx(btn) {
+  document.querySelectorAll('#ex-chips .ex-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  exAct = btn.dataset.act;
+  exMet = parseFloat(btn.dataset.met) || 0;
+
+  const stdEl    = document.getElementById('ex-input-std');
+  const passosEl = document.getElementById('ex-input-passos');
+
+  if (exAct === 'Passos') {
+    stdEl.style.display    = 'none';
+    passosEl.style.display = '';
+    document.getElementById('ex-passos').value = '';
+    document.getElementById('ex-passos-kcal').value = '';
+    document.getElementById('ex-passos-detail').textContent = '';
+    setTimeout(() => document.getElementById('ex-passos').focus(), 50);
+    return;
+  }
+
+  stdEl.style.display    = '';
+  passosEl.style.display = 'none';
+
+  const minWrap = document.getElementById('ex-min-wrap');
+  const kmWrap  = document.getElementById('ex-km-wrap');
+  if (exAct === 'Altre') {
+    minWrap.style.display = 'none';
+    kmWrap.style.display  = 'none';
+    document.getElementById('ex-km').value = '';
+    document.getElementById('ex-kcal-in').placeholder = 'kcal cremades';
+  } else {
+    minWrap.style.display = '';
+    const usaDist = (exAct === 'Caminar' || exAct === 'Córrer');
+    kmWrap.style.display = usaDist ? '' : 'none';
+    if (!usaDist) document.getElementById('ex-km').value = '';
+    document.getElementById('ex-kcal-in').placeholder = 'kcal';
+    calcExKcal();
+  }
+}
+
+function calcPassos() {
+  const total  = parseInt(document.getElementById('ex-passos').value) || 0;
+  const detEl  = document.getElementById('ex-passos-detail');
+
+  // Descompta fons (5000) + passos ja comptats en exercicis registrats
+  const descompt = 5000 + todayExPassos;
+  const extra    = Math.max(0, total - descompt);
+  const km       = extra * 0.00075;
+  const kcal     = Math.round(userPesKg * km * 0.9);
+
+  if (total <= descompt || extra === 0) {
+    document.getElementById('ex-passos-kcal').value = '';
+    if (total > 0) {
+      const parts = [`Fons: 5.000p`];
+      if (todayExPassos > 0) parts.push(`Exercici: ${todayExPassos.toLocaleString()}p`);
+      parts.push(`Total cobert: ${descompt.toLocaleString()}p`);
+      detEl.textContent = parts.join(' · ') + ' — sense extra';
+    } else {
+      detEl.textContent = '';
+    }
+    return;
+  }
+
+  document.getElementById('ex-passos-kcal').value = kcal;
+  const parts = [`Fons 5.000p`];
+  if (todayExPassos > 0) parts.push(`ex ${todayExPassos.toLocaleString()}p`);
+  parts.push(`extra ${extra.toLocaleString()}p · ${km.toFixed(1)} km · ${kcal} kcal`);
+  detEl.textContent = parts.join(' + ');
+}
+
+async function addPassos() {
+  if (!cfg.notionToken) { openSettings(); return; }
+  const total = parseInt(document.getElementById('ex-passos').value) || 0;
+  const kcal  = parseInt(document.getElementById('ex-passos-kcal').value) || 0;
+  const descompt = 5000 + todayExPassos;
+  const extra = Math.max(0, total - descompt);
+  if (!total || extra === 0) { toast('Sense passos extra a comptar', 'err'); return; }
+  if (!kcal) { toast('Sense kcal extra', 'err'); return; }
+
+  const dateStr = exDateStr || todayISO();
+  const nom     = `Passos ${total.toLocaleString()} [p:${extra}] · ${dateStr.split('-').reverse().slice(0,2).join('/')}`;
+
+  try {
+    toast('Desant…');
+    await nCreate({
+      parent: { database_id: DB_EXERCICIS },
+      properties: {
+        'Nom':       { title: [{ text: { content: nom } }] },
+        'Data':      { date: { start: dateStr } },
+        'Activitat': { select: { name: 'Passos' } },
+        'Kcal':      { number: kcal },
+      }
+    });
+    document.getElementById('ex-passos').value = '';
+    document.getElementById('ex-passos-kcal').value = '';
+    document.getElementById('ex-passos-detail').textContent = '';
+    toast('✅ Passos desats', 'ok');
+    loadExercici(dateStr);
+  } catch(e) {
+    toast('Error: ' + e.message, 'err');
+  }
+}
+
+function calcExKcal() {
+  const min = parseFloat(document.getElementById('ex-min').value) || 0;
+  const km  = parseFloat(document.getElementById('ex-km').value)  || 0;
+
+  // Distància prioritat per Caminar i Córrer
+  if (km > 0 && (exAct === 'Caminar' || exAct === 'Córrer')) {
+    // kcal ≈ pes_kg × km × factor (constante per km, independent de velocitat)
+    const factor = exAct === 'Córrer' ? 1.04 : 0.9;
+    document.getElementById('ex-kcal-in').value = Math.round(userPesKg * km * factor);
+  } else if (min > 0 && exMet > 0) {
+    // Fallback: MET × pes × temps
+    document.getElementById('ex-kcal-in').value = Math.round(exMet * userPesKg * (min / 60));
+  }
+}
+
+async function addExercici() {
+  if (!cfg.notionToken) { openSettings(); return; }
+  const kcal = parseFloat(document.getElementById('ex-kcal-in').value);
+  const min  = parseFloat(document.getElementById('ex-min').value) || null;
+  const km   = parseFloat(document.getElementById('ex-km').value)  || null;
+  if (!kcal || kcal <= 0) { toast('Introdueix les kcal', 'err'); return; }
+
+  const dateStr = exDateStr || todayISO();
+  // Calcula passos equivalents per Caminar/Córrer amb km
+  let passos = null;
+  if (km && (exAct === 'Caminar' || exAct === 'Córrer')) {
+    const strideCm = exAct === 'Córrer' ? 80 : 75;
+    passos = Math.round(km * 1000 / (strideCm / 100));
+  }
+  // Codifica km, min i passos al nom
+  const kmTag  = km     ? ` ${km}km`       : '';
+  const minTag = min    ? ` ${min}min`     : '';
+  const pTag   = passos ? ` [p:${passos}]` : '';
+  const nom = `${exAct}${kmTag}${minTag}${pTag} · ${dateStr.split('-').reverse().slice(0,2).join('/')}`;
+
+  try {
+    toast('Desant…');
+    await nCreate({
+      parent: { database_id: DB_EXERCICIS },
+      properties: {
+        'Nom':          { title: [{ text: { content: nom } }] },
+        'Data':         { date: { start: dateStr } },
+        'Activitat':    { select: { name: exAct } },
+        'Kcal':         { number: kcal },
+        ...(min ? { 'Durada (min)': { number: min } } : {}),
+      }
+    });
+    document.getElementById('ex-min').value = '';
+    document.getElementById('ex-km').value = '';
+    document.getElementById('ex-kcal-in').value = '';
+    toast('✅ Exercici desat a Notion', 'ok');
+    loadExercici(dateStr);
+  } catch(e) {
+    toast('Error: ' + e.message, 'err');
+  }
+}
+
+async function removeExercici(pageId) {
+  try {
+    await nArchive(pageId);
+    loadExercici(exDateStr || todayISO());
+  } catch(e) {
+    toast('Error esborrant: ' + e.message, 'err');
+  }
+}
+
+function renderExEntries(entries) {
+  const listEl   = document.getElementById('ex-list');
+  const totalEl  = document.getElementById('ex-total');
+  const bannerEl = document.getElementById('ex-obj-banner');
+
+  if (!entries.length) {
+    listEl.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:4px 0">Cap exercici registrat avui</div>';
+    totalEl.style.display = 'none';
+    bannerEl.style.display = 'none';
+    updateKcalRing(undefined, undefined, 0);
+    return;
+  }
+
+  // Suma passos d'exercici → global per calcPassos
+  todayExPassos = entries.reduce((s, e) => s + (e.passos || 0), 0);
+
+  listEl.innerHTML = entries.map(e => {
+    const detalls = [];
+    if (e.km)     detalls.push(`${e.km} km`);
+    if (e.min)    detalls.push(`${e.min} min`);
+    if (e.passos) detalls.push(`~${e.passos.toLocaleString()}p`);
+    const detallHtml = detalls.length
+      ? `<span style="color:var(--text3);font-size:11px;margin-left:6px">${detalls.join(' · ')}</span>`
+      : '';
+    return `
+    <div class="ex-entry">
+      <div>
+        <span style="margin-right:6px">${actIcons[e.act] || '⚡'}</span>
+        <span style="font-weight:600">${e.act}</span>
+        ${detallHtml}
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="color:var(--green);font-weight:700">+${Math.round(e.kcal)} kcal</span>
+        <span class="ex-del" onclick="removeExercici('${e.id}')">✕</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const totalKcal = entries.reduce((s, e) => s + e.kcal, 0);
+  document.getElementById('ex-total-val').textContent = '+' + Math.round(totalKcal) + ' kcal';
+  totalEl.style.display = 'flex';
+
+  const nouObj = Math.round(todayObjKcal + totalKcal);
+  document.getElementById('ex-obj-nou').textContent = nouObj + ' kcal';
+  document.getElementById('ex-obj-detail').textContent =
+    `(${Math.round(todayObjKcal)} base + ${Math.round(totalKcal)} exercici)`;
+  bannerEl.style.display = 'flex';
+
+  // Update ring with exercise kcal
+  updateKcalRing(undefined, undefined, totalKcal);
+}
+
+async function loadExercici(dateStr) {
+  if (!cfg.notionToken) return;
+  exDateStr = dateStr || todayISO();
+  const listEl = document.getElementById('ex-list');
+  if (listEl) listEl.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:4px 0">⏳ Carregant…</div>';
+
+  try {
+    const res = await nQuery(DB_EXERCICIS, { property: 'Data', date: { equals: exDateStr } });
+    const entries = (res.results || []).map(r => {
+      const nom    = r.properties['Nom']?.title?.[0]?.plain_text || '';
+      const kmMatch = nom.match(/(\d+(?:\.\d+)?)km/);
+      const pMatch  = nom.match(/\[p:(\d+)\]/);
+      const minMatch = nom.match(/(\d+(?:\.\d+)?)min/);
+      return {
+        id:    r.id,
+        act:   r.properties['Activitat']?.select?.name || 'Altre',
+        min:   r.properties['Durada (min)']?.number || (minMatch ? parseFloat(minMatch[1]) : null),
+        kcal:  r.properties['Kcal']?.number || 0,
+        km:    kmMatch ? parseFloat(kmMatch[1]) : null,
+        passos: pMatch ? parseInt(pMatch[1]) : null,
+      };
+    });
+    renderExEntries(entries);
+  } catch(e) {
+    if (listEl) listEl.innerHTML =
+      `<div style="font-size:12px;color:var(--red);padding:4px 0">Error: ${e.message}</div>`;
+  }
+}
+
+// ── PLATS ────────────────────────────────────────────
+const apatColors = {
+  Esmorzar:'background:rgba(245,158,11,.15);color:#b45309',
+  Dinar:   'background:rgba(249,115,22,.15);color:#c2440f',
+  Berenar: 'background:rgba(16,185,129,.15);color:#15803d',
+  Sopar:   'background:rgba(59,130,246,.15);color:#2563eb',
+  Qualsevol:'background:rgba(0,0,0,.07);color:var(--text3)',
+};
+
+function togglePlatForm(show, plat) {
+  const form = document.getElementById('plat-form');
+  form.style.display = show ? 'block' : 'none';
+  if (!show) {
+    // Reset
+    document.getElementById('plat-edit-id').value = '';
+    document.getElementById('plat-nom').value = '';
+    document.getElementById('plat-ingredients').value = '';
+    document.getElementById('plat-notes').value = '';
+    document.getElementById('plat-racions').value = '';
+    document.getElementById('plat-origen').value = 'plat';
+    document.getElementById('plat-form-title').textContent = 'Nou plat';
+    meal['plat'] = 'Qualsevol';
+    document.querySelectorAll('#mg-plat .meal-chip').forEach((b,i) => b.classList.toggle('active', i===0));
+    return;
+  }
+  if (plat) {
+    // Edit mode
+    document.getElementById('plat-edit-id').value = plat.id;
+    document.getElementById('plat-nom').value = plat.nom;
+    document.getElementById('plat-ingredients').value = plat.ingredients;
+    document.getElementById('plat-notes').value = plat.notes || '';
+    document.getElementById('plat-racions').value = plat.racions || '';
+    document.getElementById('plat-origen').value = plat.origen || 'plat';
+    document.getElementById('plat-form-title').textContent = 'Editar plat';
+    meal['plat'] = plat.apat || 'Qualsevol';
+    document.querySelectorAll('#mg-plat .meal-chip').forEach(b => {
+      b.classList.toggle('active', b.dataset.m === meal['plat']);
+    });
+  }
+  form.scrollIntoView({ behavior: 'smooth' });
+}
+
+async function savePlat() {
+  if (!cfg.notionToken) { openSettings(); return; }
+  const nom  = document.getElementById('plat-nom').value.trim();
+  const ing  = document.getElementById('plat-ingredients').value.trim();
+  const notes   = document.getElementById('plat-notes').value.trim();
+  const racions = parseInt(document.getElementById('plat-racions').value) || null;
+  const origen  = document.getElementById('plat-origen').value || 'plat';
+  const apat    = meal['plat'] || 'Qualsevol';
+  const editId  = document.getElementById('plat-edit-id').value;
+
+  if (!nom)  { toast('Posa un nom al plat', 'err'); return; }
+  if (!ing)  { toast('Afegeix els ingredients', 'err'); return; }
+
+  try {
+    toast('Desant…');
+    // Codifiquem origen i racions dins Notes: "[recepta][racions:19] notes del plat"
+    const tags = (origen === 'recepta' ? '[recepta]' : '') + (racions ? '[racions:' + racions + ']' : '');
+    const notesEncoded = tags ? (tags + (notes ? ' ' + notes : '')) : notes;
+    const props = {
+      'Nom':         { title: [{ text: { content: nom } }] },
+      'Àpat':        { select: { name: apat } },
+      'Ingredients': { rich_text: [{ text: { content: ing } }] },
+      ...(notesEncoded ? { 'Notes': { rich_text: [{ text: { content: notesEncoded } }] } } : {}),
+    };
+
+    if (editId) {
+      await nCall(`/v1/pages/${editId}`, 'PATCH', { properties: props });
+    } else {
+      await nCreate({ parent: { database_id: DB_PLATS }, properties: props });
+    }
+
+    togglePlatForm(false);
+    toast('✅ Plat desat', 'ok');
+    loadPlats();
+  } catch(e) {
+    toast('Error: ' + e.message, 'err');
+  }
+}
+
+async function loadPlats() {
+  if (!cfg.notionToken) return;
+  const listEl = document.getElementById('plats-list');
+  listEl.innerHTML = '<div class="empty"><div class="empty-icon">⏳</div></div>';
+
+  try {
+    const res = await nQueryFull(DB_PLATS, {
+      sorts: [{ property: 'Àpat', direction: 'ascending' }]
+    });
+
+    const plats = (res.results || []).map(r => {
+      let rawNotes = r.properties['Notes']?.rich_text?.[0]?.plain_text || '';
+      const esRecepta  = rawNotes.includes('[recepta]');
+      rawNotes = rawNotes.replace('[recepta]', '');
+      const racionsMatch = rawNotes.match(/\[racions:(\d+)\]\s*/);
+      const netNotes = racionsMatch ? rawNotes.replace(racionsMatch[0], '').trim() : rawNotes.trim();
+      return {
+        id:          r.id,
+        nom:         r.properties['Nom']?.title?.[0]?.plain_text || '(sense nom)',
+        apat:        r.properties['Àpat']?.select?.name || 'Qualsevol',
+        ingredients: r.properties['Ingredients']?.rich_text?.[0]?.plain_text || '',
+        notes:       netNotes,
+        racions:     racionsMatch ? parseInt(racionsMatch[1]) : null,
+        origen:      esRecepta ? 'recepta' : 'plat',
+      };
+    });
+
+    // Guardar al cache i globals
+    plats.forEach(p => { _platsCache[p.id] = p; });
+    _allPlats = plats;
+    renderPlatsList();
+
+  } catch(e) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-txt">Error: ${e.message}</div></div>`;
+  }
+}
+
+async function deletePlat(id) {
+  if (!confirm('Eliminar aquest plat?')) return;
+  try {
+    await nArchive(id);
+    toast('Plat eliminat', 'ok');
+    loadPlats();
+  } catch(e) {
+    toast('Error: ' + e.message, 'err');
+  }
+}
+
+let _platPendent = null;
+const _platsCache = {};
+let _platTab = 'myplats'; // tab activa: 'myplats' | 'receptes'
+let _allPlats = [];       // tots els plats carregats
+
+function switchPlatTab(tab) {
+  _platTab = tab;
+  document.getElementById('tab-myplats').classList.toggle('active', tab === 'myplats');
+  document.getElementById('tab-receptes').classList.toggle('active', tab === 'receptes');
+  // El botó "+ Nou plat" només té sentit a "Els meus plats"
+  document.getElementById('btn-nou-plat').style.display = tab === 'myplats' ? '' : 'none';
+  renderPlatsList();
+}
+
+function renderPlatsList() {
+  const listEl = document.getElementById('plats-list');
+  const subset = _allPlats.filter(p => _platTab === 'receptes' ? p.origen === 'recepta' : p.origen !== 'recepta');
+
+  if (!subset.length) {
+    const msg = _platTab === 'receptes'
+      ? 'Cap recepta importada encara.<br>Usa el botó 🥗 a <b>recetasclaude.netlify.app</b>'
+      : 'Encara no tens cap plat definit.<br>Prem "+ Nou plat" per crear-ne un.';
+    listEl.innerHTML = '<div class="empty"><div class="empty-icon">' + (_platTab === 'receptes' ? '🥗' : '🍽️') + '</div><div class="empty-txt">' + msg + '</div></div>';
+    return;
+  }
+
+  const apatColors = {
+    Qualsevol:'color:var(--text3);background:var(--bg2)',
+    Esmorzar:'color:#b45309;background:#fef3c7',
+    Dinar:'color:#0369a1;background:#e0f2fe',
+    Berenar:'color:#15803d;background:#dcfce7',
+    Sopar:'color:#7c3aed;background:#ede9fe',
+  };
+
+  listEl.innerHTML = subset.map(p => `
+    <div class="plat-card">
+      <div class="plat-header">
+        <div class="plat-nom">${p.nom}</div>
+        <span class="plat-apat" style="${apatColors[p.apat] || apatColors.Qualsevol}">${p.apat}</span>
+      </div>
+      ${p.ingredients ? `<div class="plat-ing">${p.ingredients}</div>` : ''}
+      ${p.notes ? `<div style="font-size:11px;color:var(--blue);margin-top:4px">💬 ${p.notes}</div>` : ''}
+      ${p.racions ? `<div style="font-size:11px;color:var(--text3);margin-top:4px">🍽️ ${p.racions} racions · usa <b>1/${p.racions}</b> al camp ració</div>` : ''}
+      <div class="plat-actions">
+        <button class="btn btn-primary btn-sm" onclick="usePlatById('${p.id}')">
+          ➕ ${p.apat !== 'Qualsevol' ? p.apat : 'Afegir avui'}
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="editPlatById('${p.id}')">✏️ Editar</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deletePlat('${p.id}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function usePlatById(id) {
+  const p = _platsCache[id];
+  if (!p) { toast('Error: plat no trobat', 'err'); return; }
+  toast(`📋 ing: "${p.ingredients}"`);
+  usePlat(p.id, p.nom, p.apat, p.ingredients);
+}
+
+function editPlatById(id) {
+  const p = _platsCache[id];
+  if (!p) return;
+  togglePlatForm(true, p);
+}
+
+function usePlat(id, nom, apat, ingredients) {
+  _platPendent = { id, nom, apat, ingredients };
+  _platPorcioFactor = 1;
+  // Reset chips
+  document.querySelectorAll('.porcio-chip').forEach(c => c.classList.remove('porcio-active'));
+  const def = document.getElementById('porcio-1');
+  if (def) def.classList.add('porcio-active');
+  // Neteja camp lliure
+  const inp = document.getElementById('porcio-custom');
+  if (inp) inp.value = '';
+  const prev = document.getElementById('porcio-preview');
+  if (prev) prev.textContent = '';
+  // Sempre mostra el modal (per poder triar ració)
+  document.getElementById('m-useplat-nom').textContent = `🍽️ "${nom}"`;
+  document.getElementById('m-useplat').classList.add('open');
+}
+
+function setPorcio(factor, el) {
+  _platPorcioFactor = factor;
+  document.querySelectorAll('.porcio-chip').forEach(c => c.classList.remove('porcio-active'));
+  el.classList.add('porcio-active');
+  // Neteja el camp lliure quan es tria un chip
+  const inp = document.getElementById('porcio-custom');
+  if (inp) { inp.value = ''; }
+  const prev = document.getElementById('porcio-preview');
+  if (prev) prev.textContent = '';
+}
+
+function setPorcioCustom(val) {
+  // Accepta: "350/2000", "1/3", "0.4", "2"
+  const trimmed = val.trim();
+  if (!trimmed) return;
+  let factor = null;
+  const slashMatch = trimmed.match(/^(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/);
+  if (slashMatch) {
+    const num = parseFloat(slashMatch[1]);
+    const den = parseFloat(slashMatch[2]);
+    if (den > 0) factor = num / den;
+  } else {
+    const n = parseFloat(trimmed);
+    if (!isNaN(n) && n > 0) factor = n;
+  }
+  const prev = document.getElementById('porcio-preview');
+  if (factor !== null && factor > 0) {
+    _platPorcioFactor = factor;
+    // Desselecciona chips
+    document.querySelectorAll('.porcio-chip').forEach(c => c.classList.remove('porcio-active'));
+    if (prev) prev.textContent = '×' + (Math.round(factor * 1000) / 1000);
+  } else {
+    if (prev) prev.textContent = '?';
+  }
+}
+
+function closePlatModal() {
+  document.getElementById('m-useplat').classList.remove('open');
+  _platPendent = null;
+  // NO resetegem _platPorcioFactor aquí — es fa a usePlat() i a confirmItems()
+}
+
+function confirmUsePlat(tipusApat) {
+  const plat = _platPendent;
+  closePlatModal();
+  if (!plat) return;
+
+  // Si el plat no té ingredients, obre l'edició
+  if (!plat.ingredients || !plat.ingredients.trim()) {
+    toast(`⚠️ El plat "${plat.nom}" no té ingredients. Edita'l primer.`, 'err');
+    goPage('plats');
+    setTimeout(() => togglePlatForm(true, plat), 100);
+    return;
+  }
+
+  // Navega a Text, selecciona àpat, posa els ingredients al camp
+  goPage('text');
+  document.querySelectorAll('#mg-text .meal-chip').forEach(b => {
+    if (b.dataset.m === tipusApat) selMeal(b, 'text');
+  });
+  document.getElementById('nl-input').value = plat.ingredients;
+  document.getElementById('interp-results').style.display = 'none';
+  items = [];
+
+  const porcioTxt = _platPorcioFactor !== 1 ? ` · ració ×${_platPorcioFactor}` : '';
+  toast(`🍽️ Ingredients de "${plat.nom}" carregats${porcioTxt}`);
+  setTimeout(() => document.getElementById('nl-input').scrollIntoView({ behavior: 'smooth' }), 100);
+}
+
+// ── LOAD CERCA ───────────────────────────────────────
+async function loadCerca() {
+  if (!cfg.notionToken) { openSettings(); return; }
+
+  const dateStr  = document.getElementById('c-date').value;
+  const tipusFil = meal['cerca'] || 'Tots';
+  if (!dateStr) { toast('Selecciona una data', 'err'); return; }
+
+  document.getElementById('c-ring-card').style.display   = 'none';
+  document.getElementById('c-macros-card').style.display = 'none';
+  document.getElementById('c-entries').innerHTML =
+    '<div class="empty"><div class="empty-icon">⏳</div><div class="empty-txt">Carregant…</div></div>';
+
+  try {
+    // Objectives from Resum Diari
+    const resumRes = await nQuery(DB_RESUM, { property: 'Data', date: { equals: dateStr } });
+    let objKcal = 1658, objProt = 128, objGreix = 55, objCarbs = 162, objFibra = 25;
+    if (resumRes.results?.length) {
+      const p = resumRes.results[0].properties;
+      objKcal  = p['Kcal objectiu']?.formula?.number  || p['Kcal']?.number  || objKcal;
+      objProt  = p['Prot objectiu']?.formula?.number  || p['Prot']?.number  || objProt;
+      objGreix = p['Greix objectiu']?.formula?.number || p['Greix']?.number || objGreix;
+      objCarbs = p['Carbs objectiu']?.formula?.number || p['Carbs']?.number || objCarbs;
+    }
+
+    // Query àpats filtered by date (and categoria if not "Tots")
+    const filter = tipusFil === 'Tots'
+      ? { property: 'Data', date: { equals: dateStr } }
+      : { and: [
+          { property: 'Data',      date:   { equals: dateStr } },
+          { property: 'Categoria', select: { equals: tipusFil } },
+        ]};
+    const apatsRes = await nQuery(DB_APATS, filter);
+
+    let totKcal = 0, totProt = 0, totGreix = 0, totCarbs = 0, totFibra = 0;
+    const groups = {};
+    const mealOrder = ['Esmorzar','Dinar','Berenar','Sopar'];
+    const icons = { Esmorzar:'☀️', Dinar:'🍽️', Berenar:'🍎', Sopar:'🌙' };
+
+    for (const apat of (apatsRes.results || [])) {
+      const p = apat.properties;
+      const tipus = p['Categoria']?.select?.name || 'Altres';
+      const kcal  = p['f_kcal']?.formula?.number  || p['Kcal']?.rollup?.number  || 0;
+      const prot  = p['f_prot']?.formula?.number  || p['Prot']?.rollup?.number  || 0;
+      const greix = p['f_greix']?.formula?.number || p['Greix']?.rollup?.number || 0;
+      const carbs = p['f_carbs']?.formula?.number || p['Carbs']?.rollup?.number || 0;
+      const fibra = p['f_fibra']?.formula?.number || p['Fibra']?.rollup?.number || 0;
+      const nom   = p['Nom']?.title?.[0]?.plain_text || tipus;
+      const notionUrl = `https://www.notion.so/${apat.id.replace(/-/g, '')}`;
+
+      totKcal += kcal; totProt += prot; totGreix += greix;
+      totCarbs += carbs; totFibra += fibra;
+
+      if (!groups[tipus]) groups[tipus] = [];
+      groups[tipus].push({ nom, kcal, notionUrl });
+    }
+
+    // Label
+    const d = new Date(dateStr + 'T12:00:00');
+    const wd = ['Diumenge','Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte'];
+    const mo = ['gen','feb','mar','abr','mai','jun','jul','ago','set','oct','nov','des'];
+    const lbl = `${wd[d.getDay()]}, ${d.getDate()} ${mo[d.getMonth()]} ${d.getFullYear()}${tipusFil !== 'Tots' ? ' · ' + tipusFil : ''}`;
+    document.getElementById('c-date-lbl').textContent = lbl;
+
+    // Exercici del dia
+    const exRes = await nQuery(DB_EXERCICIS, { property: 'Data', date: { equals: dateStr } });
+    const exEntries = (exRes.results || []).map(r => {
+      const p = r.properties;
+      const rawNom = p['Nom']?.title?.[0]?.plain_text || '';
+      // Treure data final " · Dx DD/MM/YYYY" i tags [p:XXXX]
+      const nomNet = rawNom.replace(/\s*·\s*\w+\s+\d{1,2}\/\d{2}\/\d{4}.*$/, '').replace(/\s*\[p:\d+\]/, '').trim();
+      return {
+        nom:  nomNet || rawNom,
+        kcal: p['Kcal']?.number || 0,
+        notionUrl: `https://www.notion.so/${r.id.replace(/-/g, '')}`,
+      };
+    });
+    const totEx = exEntries.reduce((s, e) => s + e.kcal, 0);
+
+    // Ring (igual que Avui)
+    const rnd = (v, d=1) => Math.round(v * 10**d) / 10**d;
+    const circ  = 408;
+    const total = objKcal + totEx || 1;
+    const exceeded = totKcal > total;
+    const redLen   = exceeded ? 0 : Math.min(totKcal / total * circ, circ);
+    const greenLen = exceeded ? 0 : Math.min(totEx / total * circ, Math.max(0, circ - redLen));
+
+    document.getElementById('c-kcal-ring').style.strokeDasharray  = `${redLen} ${circ}`;
+    document.getElementById('c-kcal-ring').style.strokeDashoffset = '0';
+    document.getElementById('c-ex-ring').style.strokeDasharray    = `${greenLen} ${circ}`;
+    document.getElementById('c-ex-ring').style.strokeDashoffset   = `-${redLen}`;
+
+    document.getElementById('c-kcal').textContent = rnd(totKcal, 0);
+    const net = Math.round(totKcal - totEx);
+    document.getElementById('c-net-kcal').textContent = totEx > 0 ? `net ${net} kcal` : '';
+    document.getElementById('c-kcal-obj').textContent = rnd(objKcal, 0) + ' kcal';
+    document.getElementById('c-kcal-obj-ex').textContent = totEx > 0 ? ` + ${Math.round(totEx)} ex` : '';
+
+    const restant = Math.round(total - totKcal);
+    const restantEl = document.getElementById('c-restant-num');
+    restantEl.textContent = restant >= 0 ? `+${restant}` : `${restant}`;
+    restantEl.style.color = restant >= 0 ? 'var(--green)' : 'var(--red)';
+
+    const badge = document.getElementById('c-deficit');
+    badge.textContent = `🎯 ${Math.round(total)} kcal objectiu`;
+    badge.className = 'deficit-badge';
+
+    const exPart = totEx > 0 ? ` · 🏃 ${Math.round(totEx)} ex` : '';
+    document.getElementById('c-consumed-info').textContent = `🍽️ ${Math.round(totKcal)} consumides${exPart}`;
+
+    document.getElementById('c-ring-card').style.display = 'block';
+
+    // Macros
+    document.getElementById('c-prot').textContent  = rnd(totProt);
+    document.getElementById('c-prot-obj').textContent  = `/ ${rnd(objProt,0)}g`;
+    document.getElementById('c-greix').textContent = rnd(totGreix);
+    document.getElementById('c-greix-obj').textContent = `/ ${rnd(objGreix,0)}g`;
+    document.getElementById('c-carbs').textContent = rnd(totCarbs);
+    document.getElementById('c-carbs-obj').textContent = `/ ${rnd(objCarbs,0)}g`;
+    document.getElementById('c-fibra').textContent = rnd(totFibra);
+    document.getElementById('c-fibra-obj').textContent = `/ ${objFibra}g`;
+    const setPct = (id, v, max) =>
+      document.getElementById(id).style.width = Math.min(v / max * 100, 100) + '%';
+    setPct('c-bar-prot', totProt, objProt);
+    setPct('c-bar-greix', totGreix, objGreix);
+    setPct('c-bar-carbs', totCarbs, objCarbs);
+    setPct('c-bar-fibra', totFibra, objFibra);
+    document.getElementById('c-macros-card').style.display = 'block';
+
+    // Entries
+    const el = document.getElementById('c-entries');
+    if (!Object.keys(groups).length && !exEntries.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">🍽️</div><div class="empty-txt">Cap àpat trobat</div></div>';
+      return;
+    }
+    const mealStyle = {
+      Esmorzar: { bg:'#fef3c7', accent:'#92400e', border:'rgba(245,158,11,.25)' },
+      Dinar:    { bg:'#ffedd5', accent:'#9a3412', border:'rgba(249,115,22,.25)'  },
+      Berenar:  { bg:'#dcfce7', accent:'#14532d', border:'rgba(34,197,94,.25)'   },
+      Sopar:    { bg:'#dbeafe', accent:'#1e3a8a', border:'rgba(59,130,246,.25)'  },
+    };
+    el.innerHTML = '';
+    [...mealOrder, ...Object.keys(groups).filter(k => !mealOrder.includes(k))]
+      .filter(k => groups[k])
+      .forEach(m => {
+        const totalKcal = Math.round(groups[m].reduce((s, e) => s + e.kcal, 0));
+        const style = mealStyle[m] || { bg:'var(--bg2)', accent:'var(--text2)', border:'var(--border)' };
+        const g = document.createElement('div');
+        g.className = 'mg open';
+        g.style.borderColor = style.border;
+        g.innerHTML =
+          `<div class="mg-header" style="background:${style.bg}" onclick="this.parentElement.classList.toggle('open')">
+            <div class="mg-header-left">
+              <span class="mg-meal-icon">${icons[m] || '🍽️'}</span>
+              <span class="mg-meal-name" style="color:${style.accent}">${m}</span>
+              <span class="mg-meal-kcal" style="color:${style.accent}">${totalKcal} kcal</span>
+            </div>
+            <span class="mg-chevron">▼</span>
+          </div>
+          <div class="mg-body" style="border-top-color:${style.border}">` +
+          groups[m].map(e => `
+            <a href="${e.notionUrl}" target="_blank" rel="noopener" style="text-decoration:none;display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+              <div class="entry-name" style="flex:1;color:var(--text)">${e.nom}</div>
+              <div style="display:flex;align-items:center;gap:6px">
+                <div class="entry-kcal">${Math.round(e.kcal)} kcal</div>
+                <span style="font-size:13px;opacity:0.4">↗</span>
+              </div>
+            </a>`).join('') +
+          `</div>`;
+        el.appendChild(g);
+      });
+
+    // Bloc exercicis
+    if (exEntries.length) {
+      const exStyle = { bg:'#ede9fe', accent:'#5b21b6', border:'rgba(124,58,237,.25)' };
+      const totalExKcal = Math.round(exEntries.reduce((s, e) => s + e.kcal, 0));
+      const gEx = document.createElement('div');
+      gEx.className = 'mg open';
+      gEx.style.borderColor = exStyle.border;
+      gEx.innerHTML =
+        `<div class="mg-header" style="background:${exStyle.bg}" onclick="this.parentElement.classList.toggle('open')">
+          <div class="mg-header-left">
+            <span class="mg-meal-icon">🏃</span>
+            <span class="mg-meal-name" style="color:${exStyle.accent}">Exercici</span>
+            <span class="mg-meal-kcal" style="color:${exStyle.accent}">${totalExKcal} kcal</span>
+          </div>
+          <span class="mg-chevron">▼</span>
+        </div>
+        <div class="mg-body" style="border-top-color:${exStyle.border}">` +
+        exEntries.map(e => `
+          <a href="${e.notionUrl}" target="_blank" rel="noopener" style="text-decoration:none;display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+            <div class="entry-name" style="flex:1;color:var(--text)">${e.nom}</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="entry-kcal" style="color:${exStyle.accent}">${Math.round(e.kcal)} kcal</div>
+              <span style="font-size:13px;opacity:0.4">↗</span>
+            </div>
+          </a>`).join('') +
+        `</div>`;
+      el.appendChild(gEx);
+    }
+
+  } catch(e) {
+    document.getElementById('c-entries').innerHTML =
+      `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-txt">Error: ${e.message}</div></div>`;
+  }
+}
+
+// ── GO TO DAY ────────────────────────────────────────
+function goToDay(dateStr) {
+  document.getElementById('c-date').value = dateStr;
+  meal['cerca'] = 'Tots';
+  document.querySelectorAll('#mg-cerca .meal-chip').forEach((b, i) => b.classList.toggle('active', i === 0));
+  goPage('cerca');
+  loadCerca();
+}
+
+// ── LOAD SETMANA ─────────────────────────────────────
+async function loadSetmana() {
+  if (!cfg.notionToken) { openSettings(); return; }
+
+  document.getElementById('w-chart').innerHTML =
+    '<div class="empty" style="width:100%;padding:20px 0"><div class="empty-icon">⏳</div></div>';
+  document.getElementById('w-daylist').innerHTML =
+    '<div class="empty" style="padding:16px 0"><div class="empty-txt">Carregant…</div></div>';
+
+  try {
+    // Últims 7 dies COMPLETS (ahir i anteriors, sense avui)
+    const days = [];
+    for (let i = 7; i >= 1; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push(d.toISOString().split('T')[0]);
+    }
+    const startDate = days[0];
+    const endDate   = days[days.length - 1];
+
+    // Àpats → kcal per dia
+    const apatsRes = await nQuery(DB_APATS, {
+      and: [
+        { property: 'Data', date: { on_or_after: startDate } },
+        { property: 'Data', date: { on_or_before: endDate } }
+      ]
+    });
+    const kcalByDate = {};
+    for (const apat of (apatsRes.results || [])) {
+      const p = apat.properties;
+      const dateVal = p['Data']?.date?.start?.split('T')[0];
+      if (!dateVal) continue;
+      const kcal = p['f_kcal']?.formula?.number || p['Kcal']?.rollup?.number || 0;
+      kcalByDate[dateVal] = (kcalByDate[dateVal] || 0) + kcal;
+    }
+
+    // Exercici → kcal cremades per dia
+    const exRes = await nQuery(DB_EXERCICIS, {
+      and: [
+        { property: 'Data', date: { on_or_after: startDate } },
+        { property: 'Data', date: { on_or_before: endDate } }
+      ]
+    });
+    const exByDate = {};
+    for (const ex of (exRes.results || [])) {
+      const p = ex.properties;
+      const dateVal = p['Data']?.date?.start?.split('T')[0];
+      if (!dateVal) continue;
+      const kcal = p['Kcal']?.number || 0;
+      exByDate[dateVal] = (exByDate[dateVal] || 0) + kcal;
+    }
+
+    // Resum Diari → objectiu per dia
+    const resumRes = await nQuery(DB_RESUM, {
+      and: [
+        { property: 'Data', date: { on_or_after: startDate } },
+        { property: 'Data', date: { on_or_before: endDate } }
+      ]
+    });
+    const objByDate = {};
+    let defaultObj = 1658;
+    for (const row of (resumRes.results || [])) {
+      const p = row.properties;
+      const dateVal = p['Data']?.date?.start?.split('T')[0];
+      if (!dateVal) continue;
+      const obj = p['Kcal objectiu']?.formula?.number || p['Kcal']?.number || defaultObj;
+      objByDate[dateVal] = obj;
+      defaultObj = obj;
+    }
+
+    // Construeix array de dies amb totes les dades
+    const dayData = days.map(d => ({
+      date:    d,
+      kcal:    kcalByDate[d] || 0,
+      exKcal:  exByDate[d]   || 0,
+      objKcal: objByDate[d]  || defaultObj,
+      hasData: !!kcalByDate[d],
+    }));
+
+    const lastObj = dayData[dayData.length - 1].objKcal || defaultObj;
+    document.getElementById('w-obj-val').textContent = Math.round(lastObj);
+
+    // Estadístiques (basat en target ajustat amb exercici)
+    const withData = dayData.filter(d => d.hasData && d.kcal > 0);
+    const avgKcal  = withData.length
+      ? Math.round(withData.reduce((s, d) => s + d.kcal, 0) / withData.length) : 0;
+    const withEx   = dayData.filter(d => d.exKcal > 0);
+    const avgEx    = withEx.length
+      ? Math.round(withEx.reduce((s, d) => s + d.exKcal, 0) / withEx.length) : 0;
+    const daysOk   = withData.filter(d => {
+      const target = d.objKcal + d.exKcal;
+      return d.kcal >= target * 0.85 && d.kcal <= target * 1.1;
+    }).length;
+
+    // Ratxa: dies consecutius OK ending en el darrer dia
+    let streak = 0;
+    for (let i = dayData.length - 1; i >= 0; i--) {
+      const d = dayData[i];
+      const target = d.objKcal + d.exKcal;
+      if (d.hasData && d.kcal > 0 && d.kcal >= target * 0.85 && d.kcal <= target * 1.1) streak++;
+      else break;
+    }
+
+    document.getElementById('w-avg').textContent = avgKcal || '—';
+    document.getElementById('w-avg-ex').textContent = avgEx ? avgEx + ' kcal' : '—';
+    document.getElementById('w-ok').textContent = daysOk + '/7';
+    document.getElementById('w-streak').textContent = streak + '🔥';
+
+    // Velocitat actual des de Configuració
+    nGetPage(CONFIG_ID).then(cfgPage => {
+      const vel = cfgPage?.properties?.['Velocitat']?.number;
+      if (vel != null) {
+        document.getElementById('w-vel').textContent = vel + ' kg/set';
+        const velLbl = vel === 0 ? 'Manteniment' : vel <= 0.25 ? 'Ritme suau' : vel <= 0.5 ? 'Ritme moderat' : 'Ritme intens';
+        document.getElementById('w-vel-lbl').textContent = velLbl;
+        document.getElementById('w-vel').style.color = vel === 0 ? 'var(--text2)' : vel <= 0.25 ? 'var(--green)' : vel <= 0.5 ? 'var(--yellow)' : 'var(--accent)';
+      }
+    }).catch(() => {});
+
+    // Gràfic de barres
+    const maxKcal = Math.max(...dayData.map(d => d.kcal + d.exKcal), lastObj * 1.15, 100);
+    const dayNames   = ['Dg','Dl','Dt','Dc','Dj','Dv','Ds'];
+    const monthNames = ['gen','feb','mar','abr','mai','jun','jul','ago','set','oct','nov','des'];
+
+    const chartEl = document.getElementById('w-chart');
+    chartEl.innerHTML = '';
+    dayData.forEach(d => {
+      const date   = new Date(d.date + 'T12:00:00');
+      const target = d.objKcal + d.exKcal;
+      const pct    = d.kcal > 0 ? Math.round(d.kcal / maxKcal * 100) : 0;
+      const isOver = d.kcal > target;
+      const color  = d.kcal > 0 ? (isOver ? 'var(--red)' : 'var(--green)') : 'rgba(0,0,0,.08)';
+
+      const wrap = document.createElement('div');
+      wrap.className = 'wbar-wrap';
+      wrap.innerHTML = `
+        <div class="wbar-kcal">${d.kcal > 0 ? Math.round(d.kcal) : ''}</div>
+        <div class="wbar-outer">
+          <div class="wbar${isOver ? ' over' : ''}" style="height:${pct}%;background:${color}"></div>
+        </div>
+        <div class="wbar-day">${dayNames[date.getDay()]}</div>
+      `;
+      chartEl.appendChild(wrap);
+    });
+
+    // Llista de dies (del més recent al més antic)
+    const listEl = document.getElementById('w-daylist');
+    listEl.innerHTML = '';
+    [...dayData].reverse().forEach(d => {
+      const date    = new Date(d.date + 'T12:00:00');
+      const target  = d.objKcal + d.exKcal;
+      const net     = Math.round(target - d.kcal); // positiu = marge disponible; negatiu = excedit
+      const isOver  = d.kcal > target * 1.1;
+      const isOk    = d.kcal >= target * 0.85 && !isOver && d.kcal > 0;
+      const dotColor  = isOver ? 'var(--red)' : isOk ? 'var(--green)' : (d.kcal > 0 ? 'var(--yellow)' : 'rgba(0,0,0,.12)');
+      const kcalColor = !d.hasData ? 'var(--text3)' : d.kcal <= target ? 'var(--green)' : 'var(--red)';
+      const netColor  = net >= 0 ? 'var(--green)' : 'var(--red)';
+      const dayLabel  = ['Diumenge','Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte'][date.getDay()];
+      const dateLabel = `${date.getDate()} ${monthNames[date.getMonth()]}`;
+
+      const row = document.createElement('div');
+      row.className = 'wday-row';
+      row.style.cursor = 'pointer';
+      row.onclick = () => goToDay(d.date);
+      row.innerHTML = `
+        <div class="wday-left">
+          <div class="wday-dot" style="background:${netColor}"></div>
+          <div>
+            <div class="wday-name">${dayLabel}</div>
+            <div style="font-size:11px;color:var(--text3)">${dateLabel}</div>
+          </div>
+        </div>
+        <div class="wday-right">
+          ${d.hasData ? `
+            <div style="text-align:right">
+              <div class="wday-kcal" style="color:${kcalColor}">${Math.round(d.kcal)} kcal</div>
+              ${d.exKcal > 0 ? `<div style="font-size:11px;color:var(--green)">🏃 +${Math.round(d.exKcal)} ex</div>` : ''}
+              <div style="font-size:12px;font-weight:700;color:${netColor}">${net >= 0 ? '+' : ''}${net} kcal</div>
+            </div>
+          ` : `<div class="wday-pct">sense dades</div>`}
+        </div>
+      `;
+      listEl.appendChild(row);
+    });
+
+  } catch(e) {
+    document.getElementById('w-chart').innerHTML =
+      `<div class="empty" style="width:100%"><div class="empty-icon">⚠️</div><div class="empty-txt">Error: ${e.message}</div></div>`;
+  }
+}
+
+// ── SETTINGS ──────────────────────────────────────────
+function openSettings() {
+  document.getElementById('s-notion').value = cfg.notionToken;
+  document.getElementById('s-claude').value = cfg.claudeKey;
+  document.getElementById('s-proxy').value  = cfg.proxyUrl;
+  document.getElementById('s-default-tab').value = ls('defaultTab') || 'today';
+  // Carregar valors actuals de Notion si tenim token
+  document.getElementById('s-pes-obj').value   = '';
+  document.getElementById('s-velocitat').value = '';
+  if (cfg.notionToken) {
+    nGetPage(CONFIG_ID).then(cfgPage => {
+      const p = cfgPage?.properties;
+      if (!p) return;
+      const pesObj   = p['Pes objectiu']?.number;
+      const vel      = p['Velocitat']?.number;
+      if (pesObj != null) document.getElementById('s-pes-obj').value   = pesObj;
+      if (vel    != null) document.getElementById('s-velocitat').value = vel;
+    }).catch(() => {});
+  }
+  document.getElementById('m-settings').classList.add('open');
+}
+function closeSettings() { document.getElementById('m-settings').classList.remove('open'); }
+async function saveSettings() {
+  cfg.notionToken = document.getElementById('s-notion').value.trim();
+  cfg.claudeKey   = document.getElementById('s-claude').value.trim();
+  cfg.proxyUrl    = document.getElementById('s-proxy').value.trim();
+  lsSet('notionToken', cfg.notionToken);
+  lsSet('claudeKey',   cfg.claudeKey);
+  lsSet('proxyUrl',    cfg.proxyUrl);
+  lsSet('defaultTab',  document.getElementById('s-default-tab').value);
+
+  // Actualitzar objectius a Notion si hi ha valors i token
+  const pesObj   = parseFloat(document.getElementById('s-pes-obj').value);
+  const vel      = parseFloat(document.getElementById('s-velocitat').value);
+  if (cfg.notionToken && (!isNaN(pesObj) || !isNaN(vel))) {
+    const props = {};
+    if (!isNaN(pesObj)) props['Pes objectiu'] = { number: pesObj };
+    if (!isNaN(vel))    props['Velocitat']     = { number: vel };
+    try {
+      await nPatch(CONFIG_ID, props);
+      toast('✅ Objectius actualitzats a Notion', 'ok');
+      closeSettings();
+      loadToday(); // recalcula targets
+    } catch(e) {
+      toast('⚠️ Error desant a Notion: ' + e.message, 'err');
+    }
+  } else {
+    closeSettings();
+    toast('✅ Configuració desada', 'ok');
+  }
+}
+
+// ── ADMIN: NETEJA CATÀLEG ─────────────────────────────
+let _adminGrups = []; // guarda els grups de duplicats per referència
+
+function normalitzaNom(nom) {
+  return nom.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '') // treure accents
+    .replace(/\s*\(.*?\)\s*/g, '')  // treure parèntesis
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, ' ').trim();
+}
+
+function paraulesNom(nom) {
+  // Paraules ignorables (articles, preposicions)
+  const stopWords = new Set(['de','del','la','el','les','els','i','y','a','con','sin','en','al']);
+  return new Set(normalitzaNom(nom).split(' ').filter(w => w.length > 1 && !stopWords.has(w)));
+}
+
+function similitudNoms(nomA, nomB) {
+  const wa = paraulesNom(nomA);
+  const wb = paraulesNom(nomB);
+  if (!wa.size || !wb.size) return 0;
+  let interseccio = 0;
+  for (const w of wa) if (wb.has(w)) interseccio++;
+  // Jaccard sobre el conjunt més petit (evita falsos positius amb noms llargs)
+  const minsim = Math.min(wa.size, wb.size);
+  return interseccio / minsim; // 1.0 = el nom curt és subconjunt del llarg
+}
+
+async function loadAdminDuplicats() {
+  if (!cfg.notionToken) { openSettings(); return; }
+  const el = document.getElementById('admin-results');
+  el.innerHTML = '<div class="empty"><div class="empty-icon">⏳</div><div class="empty-txt">Carregant catàleg…</div></div>';
+
+  try {
+    // Carrega tots els aliments (paginat)
+    let aliments = [], cursor = undefined;
+    do {
+      const body = { page_size: 100 };
+      if (cursor) body.start_cursor = cursor;
+      const res = await nCall(`/v1/databases/${DB_ALIMENTS}/query`, 'POST', body);
+      for (const pg of (res.results || [])) {
+        const p = pg.properties;
+        const nom = p['Nom']?.title?.[0]?.plain_text || '';
+        if (!nom) continue;
+        aliments.push({
+          id:    pg.id,
+          nom,
+          kcal:  p['kcal/100g']?.number ?? null,
+          greix: p['Greix/100g']?.number ?? null,
+          url:   'https://www.notion.so/' + pg.id.replace(/-/g,''),
+        });
+      }
+      cursor = res.next_cursor;
+    } while (cursor);
+
+    // Agrupa per similitud: primer per nom exacte normalitzat, després per solapament de paraules
+    const LLINDAR = 0.60; // 60% de paraules del nom curt han d'aparèixer al llarg
+    const agrupats = new Set();
+    const grups = [];
+
+    for (let i = 0; i < aliments.length; i++) {
+      if (agrupats.has(i)) continue;
+      const grup = [aliments[i]];
+      agrupats.add(i);
+      for (let j = i + 1; j < aliments.length; j++) {
+        if (agrupats.has(j)) continue;
+        const sim = similitudNoms(aliments[i].nom, aliments[j].nom);
+        if (sim >= LLINDAR) {
+          grup.push(aliments[j]);
+          agrupats.add(j);
+        }
+      }
+      if (grup.length > 1) grups.push(grup);
+    }
+    const duplicats = grups;
+    _adminGrups = duplicats; // guarda globalment per als onclicks
+
+    if (!duplicats.length) {
+      el.innerHTML = '<div class="card"><div class="empty"><div class="empty-icon">✅</div><div class="empty-txt">No s\'han detectat duplicats!</div></div></div>';
+      return;
+    }
+
+    el.innerHTML = `<div class="card" style="margin-bottom:8px">
+      <div style="font-size:13px;color:var(--text2)">S'han detectat <b>${duplicats.length} grups</b> amb possibles duplicats. Tria quina entrada vols conservar per a cada grup:</div>
+    </div>`;
+
+    duplicats.forEach((grup, gi) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.marginBottom = '8px';
+      card.id = `dup-grup-${gi}`;
+
+      const nomNorm = normalitzaNom(grup[0].nom);
+      card.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">${nomNorm}</div>` +
+        grup.map((a, ai) => `
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+            <input type="radio" name="dup-${gi}" id="dup-${gi}-${ai}" value="${a.id}" ${ai===0?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;flex-shrink:0">
+            <label for="dup-${gi}-${ai}" style="flex:1;cursor:pointer">
+              <div style="font-size:14px;font-weight:700">${a.nom}</div>
+              <div style="font-size:11px;color:var(--text3)">${a.kcal ?? '?'} kcal/100g · ${a.greix ?? '?'} g greix · <a href="${a.url}" target="_blank" style="color:var(--blue)">Notion ↗</a></div>
+            </label>
+          </div>`).join('') +
+        `<button class="btn btn-primary" style="margin-top:10px;font-size:13px" onclick="fusionaDuplicat(${gi})">🔀 Fusiona (conserva el seleccionat)</button>`;
+
+      el.appendChild(card);
+    });
+
+  } catch(e) {
+    el.innerHTML = `<div class="card"><div class="empty"><div class="empty-icon">⚠️</div><div class="empty-txt">Error: ${e.message}</div></div></div>`;
+  }
+}
+
+async function fusionaDuplicat(gi) {
+  const radioSeleccionat = document.querySelector(`input[name="dup-${gi}"]:checked`);
+  if (!radioSeleccionat) return;
+  const bonId   = radioSeleccionat.value;
+  const ids     = (_adminGrups[gi] || []).map(a => a.id);
+  const dolents = ids.filter(id => id !== bonId);
+
+  const card = document.getElementById(`dup-grup-${gi}`);
+  card.innerHTML = '<div style="padding:12px;color:var(--text3);font-size:13px">⏳ Fusionant…</div>';
+
+  try {
+    for (const malId of dolents) {
+      // 1. Busca totes les línies que referencien l'aliment dolent
+      let cursor2 = undefined;
+      do {
+        const body = { filter: { property: 'Aliment', relation: { contains: malId } }, page_size: 100 };
+        if (cursor2) body.start_cursor = cursor2;
+        const linRes = await nCall(`/v1/databases/${DB_LINIES}/query`, 'POST', body);
+        for (const lin of (linRes.results || [])) {
+          // Re-vincula al bon aliment
+          await nPatch(lin.id, { 'Aliment': { relation: [{ id: bonId }] } });
+        }
+        cursor2 = linRes.next_cursor;
+      } while (cursor2);
+
+      // 2. Arxiva l'aliment dolent
+      await nCall(`/v1/pages/${malId}`, 'PATCH', { archived: true });
+    }
+
+    card.innerHTML = `<div style="padding:12px;display:flex;align-items:center;gap:8px">
+      <span style="font-size:20px">✅</span>
+      <span style="font-size:13px;color:var(--green);font-weight:700">Fusió completada — ${dolents.length} entrada(es) arxivada(es) i línies re-vinculades.</span>
+    </div>`;
+  } catch(e) {
+    card.innerHTML = `<div style="padding:12px;color:var(--red);font-size:13px">❌ Error durant la fusió: ${e.message}</div>`;
+  }
+}
+
+// ── ADMIN: RECALCULA LÍNIES ───────────────────────────
+let _adminAlimentSeleccionat = null; // { id, nom, kcal, prot, greix, carbs, fibra }
+let _adminAliments = [];             // cache del catàleg
+
+async function cercaAlimentAdmin() {
+  const q = document.getElementById('adm-aliment-cerca').value.trim().toLowerCase();
+  const resEl = document.getElementById('adm-aliment-resultats');
+  const previewEl = document.getElementById('adm-recalc-preview');
+  _adminAlimentSeleccionat = null;
+  previewEl.style.display = 'none';
+
+  if (q.length < 2) { resEl.innerHTML = ''; return; }
+
+  // Carrega catàleg si no el tenim
+  if (!_adminAliments.length) {
+    resEl.innerHTML = '<div style="font-size:12px;color:var(--text3)">⏳ Carregant catàleg…</div>';
+    let cursor;
+    do {
+      const body = { page_size: 100 };
+      if (cursor) body.start_cursor = cursor;
+      const res = await nCall(`/v1/databases/${DB_ALIMENTS}/query`, 'POST', body);
+      for (const pg of (res.results || [])) {
+        const p = pg.properties;
+        const nom = p['Nom']?.title?.[0]?.plain_text || '';
+        if (!nom) continue;
+        _adminAliments.push({
+          id:    pg.id,
+          nom,
+          kcal:  p['kcal/100g']?.number  ?? 0,
+          prot:  p['Prot/100g']?.number  ?? 0,
+          greix: p['Greix/100g']?.number ?? 0,
+          carbs: p['Carbs/100g']?.number ?? 0,
+          fibra: p['Fibra/100g']?.number ?? 0,
+        });
+      }
+      cursor = res.next_cursor;
+    } while (cursor);
+  }
+
+  const trobats = _adminAliments.filter(a => normalitzaNom(a.nom).includes(normalitzaNom(q))).slice(0, 8);
+  if (!trobats.length) { resEl.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:4px 0">Cap resultat</div>'; return; }
+
+  resEl.innerHTML = trobats.map(a =>
+    `<div onclick="seleccionaAlimentAdmin('${a.id}')" style="padding:8px 10px;margin-bottom:4px;background:var(--bg2);border-radius:8px;cursor:pointer;border:1.5px solid transparent" id="adm-opt-${a.id.replace(/-/g,'')}">
+      <div style="font-size:14px;font-weight:700">${a.nom}</div>
+      <div style="font-size:11px;color:var(--text3)">${a.kcal} kcal · ${a.prot}g prot · ${a.greix}g greix · ${a.carbs}g carbs /100g</div>
+    </div>`
+  ).join('');
+}
+
+async function seleccionaAlimentAdmin(id) {
+  _adminAlimentSeleccionat = _adminAliments.find(a => a.id === id);
+  if (!_adminAlimentSeleccionat) return;
+
+  // Ressalta la selecció
+  document.querySelectorAll('[id^="adm-opt-"]').forEach(el => el.style.borderColor = 'transparent');
+  const optEl = document.getElementById('adm-opt-' + id.replace(/-/g,''));
+  if (optEl) optEl.style.borderColor = 'var(--accent)';
+
+  // Compta quantes línies fan referència a aquest aliment
+  const infoEl = document.getElementById('adm-recalc-info');
+  infoEl.textContent = '⏳ Comptant línies afectades…';
+  document.getElementById('adm-recalc-preview').style.display = 'block';
+
+  try {
+    const res = await nCall(`/v1/databases/${DB_LINIES}/query`, 'POST', {
+      filter: { property: 'Aliment', relation: { contains: id } },
+      page_size: 1,
+    });
+    // Notion retorna `total` o fem una consulta real per comptar
+    let total = 0, cursor2;
+    do {
+      const body = { filter: { property: 'Aliment', relation: { contains: id } }, page_size: 100 };
+      if (cursor2) body.start_cursor = cursor2;
+      const r2 = await nCall(`/v1/databases/${DB_LINIES}/query`, 'POST', body);
+      total += (r2.results || []).length;
+      cursor2 = r2.next_cursor;
+    } while (cursor2);
+
+    const a = _adminAlimentSeleccionat;
+    infoEl.innerHTML = `<b>${a.nom}</b> té <b>${total} línia(es)</b> d'àpat.<br>
+      Es recalcularan amb: <b>${a.kcal} kcal · ${a.prot}g prot · ${a.greix}g greix · ${a.carbs}g carbs</b> per 100g.`;
+  } catch(e) {
+    infoEl.textContent = '⚠️ Error: ' + e.message;
+  }
+}
+
+async function confirmaRecalcul() {
+  const a = _adminAlimentSeleccionat;
+  if (!a) return;
+  const btn = document.querySelector('#adm-recalc-preview button');
+  btn.textContent = '⏳ Recalculant…';
+  btn.disabled = true;
+
+  try {
+    let actualitzades = 0, cursor;
+    do {
+      const body = { filter: { property: 'Aliment', relation: { contains: a.id } }, page_size: 100 };
+      if (cursor) body.start_cursor = cursor;
+      const res = await nCall(`/v1/databases/${DB_LINIES}/query`, 'POST', body);
+      for (const lin of (res.results || [])) {
+        const qty = lin.properties['Quantitat (g)']?.number || 0;
+        if (qty <= 0) continue;
+        const f = qty / 100;
+        await nPatch(lin.id, {
+          'kcal':      { number: Math.round(a.kcal  * f) },
+          'Prot (g)':  { number: Math.round(a.prot  * f * 10) / 10 },
+          'Greix (g)': { number: Math.round(a.greix * f * 10) / 10 },
+          'Carbs (g)': { number: Math.round(a.carbs * f * 10) / 10 },
+          'Fibra (g)': { number: Math.round(a.fibra * f * 10) / 10 },
+        });
+        actualitzades++;
+      }
+      cursor = res.next_cursor;
+    } while (cursor);
+
+    document.getElementById('adm-recalc-info').innerHTML =
+      `✅ <b>${actualitzades} línia(es)</b> recalculades correctament amb els valors actuals del catàleg.`;
+    btn.textContent = '✅ Fet';
+  } catch(e) {
+    document.getElementById('adm-recalc-info').innerHTML = `❌ Error: ${e.message}`;
+    btn.textContent = '⚡ Reintenta';
+    btn.disabled = false;
+  }
+}
+
+// ── HISTORIAL DE LÍNIES ──────────────────────────────
+let _linHistAlimentId  = null;
+let _linHistAlimentNom = null;
+let _linCercaTimer     = null;
+
+async function linCercaInput() {
+  clearTimeout(_linCercaTimer);
+  const q   = document.getElementById('lin-cerca').value.trim();
+  const sug = document.getElementById('lin-suggeriments');
+  const res = document.getElementById('lin-resultats');
+  if (q.length < 2) { sug.innerHTML = ''; res.innerHTML = ''; return; }
+  _linCercaTimer = setTimeout(async () => {
+    sug.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:4px 2px">⏳ Cercant…</div>';
+    try {
+      const r = await nQueryFull(DB_ALIMENTS, {
+        filter: { property: 'Nom', title: { contains: q } },
+        sorts:  [{ property: 'Nom', direction: 'ascending' }],
+        page_size: 15,
+      });
+      const aliments = (r.results || []).map(pg => ({
+        id:  pg.id,
+        nom: pg.properties['Nom']?.title?.[0]?.plain_text || '—',
+      }));
+      if (!aliments.length) {
+        sug.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:4px 2px">Cap aliment trobat</div>';
+        return;
+      }
+      sug.innerHTML = aliments.map(a =>
+        '<button onclick="linSelAliment(\'' + a.id + '\',\'' + a.nom.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')" '
+        + 'style="display:block;width:100%;text-align:left;padding:9px 13px;margin-bottom:4px;'
+        + 'background:var(--card);border:1px solid var(--border);border-radius:10px;'
+        + 'font-size:14px;cursor:pointer;color:var(--text)">' + a.nom + '</button>'
+      ).join('');
+    } catch(e) {
+      sug.innerHTML = '<div style="color:var(--red);font-size:13px">Error: ' + e.message + '</div>';
+    }
+  }, 380);
+}
+
+async function linSelAliment(alimentId, alimentNom) {
+  _linHistAlimentId  = alimentId;
+  _linHistAlimentNom = alimentNom;
+  document.getElementById('lin-cerca').value = alimentNom;
+  document.getElementById('lin-suggeriments').innerHTML = '';
+  await linShowResultats(alimentId, alimentNom);
+}
+
+async function linShowResultats(alimentId, alimentNom) {
+  const el = document.getElementById('lin-resultats');
+  el.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 2px">⏳ Carregant línies…</div>';
+  try {
+    const res = await nQueryFull(DB_LINIES, {
+      filter: { property: 'Aliment', relation: { contains: alimentId } },
+      page_size: 100,
+    });
+    const rawLinies = res.results || [];
+    if (!rawLinies.length) {
+      el.innerHTML = '<div class="card" style="color:var(--text3);text-align:center;padding:20px 14px">Cap línia trobada per "<b>' + alimentNom + '</b>"</div>';
+      return;
+    }
+
+    // Recull Àpat IDs únics
+    const apatIds = [];
+    for (const pg of rawLinies) {
+      const aid = pg.properties['Àpat']?.relation?.[0]?.id;
+      if (aid && !apatIds.includes(aid)) apatIds.push(aid);
+    }
+
+    // Fetch de totes les pàgines d'Àpat en paral·lel
+    const apatPgs = await Promise.all(apatIds.map(id => nGetPage(id).catch(() => null)));
+    const apatById = {};
+    for (const ap of apatPgs) {
+      if (!ap) continue;
+      apatById[ap.id] = {
+        data:      ap.properties?.['Data']?.date?.start || '',
+        categoria: ap.properties?.['Categoria']?.select?.name || '?',
+      };
+    }
+
+    // Construeix linies amb data i categoria
+    const linies = rawLinies.map(pg => {
+      const pp     = pg.properties;
+      const apatId = pp['Àpat']?.relation?.[0]?.id || '';
+      const info   = apatById[apatId] || { data: '', categoria: '?' };
+      return {
+        id:        pg.id,
+        nom:       alimentNom,
+        alimentId: alimentId,
+        kcal:      pp['kcal']?.number           || 0,
+        prot:      pp['Prot (g)']?.number       || 0,
+        greix:     pp['Greix (g)']?.number      || 0,
+        carbs:     pp['Carbs (g)']?.number      || 0,
+        fibra:     pp['Fibra (g)']?.number      || 0,
+        qty:       pp['Quantitat (g)']?.number  || 0,
+        data:      info.data,
+        categoria: info.categoria,
+      };
+    });
+
+    // Ordena per data descendent
+    linies.sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+
+    const html = linies.map(l => {
+      const lid   = l.id.replace(/-/g, '');
+      const elId  = 'lin-hist-' + lid;
+      const dParts = l.data ? l.data.split('-') : null;
+      const dataFmt = dParts ? dParts[2] + '/' + dParts[1] + '/' + dParts[0] : '?';
+      const safNom  = l.nom.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      return '<div class="card" style="padding:11px 14px;margin-bottom:8px">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center">'
+        +   '<div style="flex:1;min-width:0">'
+        +     '<div style="font-size:12px;color:var(--text3);margin-bottom:4px">'
+        +       dataFmt + ' · <span style="font-weight:600;color:var(--text2)">' + l.categoria + '</span>'
+        +     '</div>'
+        +     '<div id="qty-sub-' + lid + '" style="font-size:13px;color:var(--text2)">'
+        +       '<span onclick="startEditQty(\'' + l.id + '\',' + l.qty + ',' + l.kcal + ',' + l.prot + ',' + l.greix + ',' + l.carbs + ',' + l.fibra + ',\'' + elId + '\')" '
+        +         'style="cursor:pointer;border-bottom:1px dotted var(--blue);color:var(--blue);font-weight:600">'
+        +         Math.round(l.qty) + 'g</span>'
+        +       ' · ' + Math.round(l.kcal) + ' kcal'
+        +     '</div>'
+        +   '</div>'
+        +   '<button onclick="obrirCopiaLinia(\'' + l.id + '\',\'' + safNom + '\',' + l.qty + ',' + l.kcal + ',' + l.prot + ',' + l.greix + ',' + l.carbs + ',' + l.fibra + ',\'' + l.alimentId + '\')" '
+        +     'style="background:none;border:none;cursor:pointer;font-size:17px;opacity:0.55;padding:4px 6px;flex-shrink:0" title="Copiar a un altre àpat">📋</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);margin-bottom:6px;padding-left:2px">'
+      + linies.length + (linies.length === 1 ? ' línia' : ' línies')
+      + ' de <b style="color:var(--text2)">' + alimentNom + '</b></div>'
+      + html;
+
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--red);font-size:13px;padding:8px">Error: ' + e.message + '</div>';
+  }
+}
+
+// ── COPIAR LÍNIA ──────────────────────────────────────
+let _copiaLinia = null; // { id, nom, qty, kcal, prot, greix, carbs, fibra, alimentId }
+
+function obrirCopiaLinia(id, nom, qty, kcal, prot, greix, carbs, fibra, alimentId) {
+  _copiaLinia = { id, nom, qty, kcal, prot, greix, carbs, fibra, alimentId };
+  document.getElementById('m-copia-nom').textContent = nom + ' · ' + Math.round(qty) + 'g · ' + Math.round(kcal) + ' kcal';
+  document.getElementById('copia-qty').value = Math.round(qty);
+  document.getElementById('copia-data').value = todayISO();
+  meal['copia'] = 'Esmorzar';
+  document.querySelectorAll('#mg-copia .meal-chip').forEach((b, i) => b.classList.toggle('active', i === 0));
+  document.getElementById('m-copia-linia').classList.add('open');
+}
+
+function closeCopiaLinia() {
+  document.getElementById('m-copia-linia').classList.remove('open');
+}
+
+async function confirmarCopiaLinia() {
+  if (!_copiaLinia) return;
+  const dateStr  = document.getElementById('copia-data').value;
+  const tipusAp  = meal['copia'] || 'Esmorzar';
+  if (!dateStr) { toast('Selecciona una data', 'err'); return; }
+
+  // Llegeix la quantitat del camp (pot diferir de l'original)
+  const newQty = parseFloat(document.getElementById('copia-qty').value);
+  if (!newQty || newQty <= 0) { toast('Quantitat no vàlida', 'err'); return; }
+
+  const btn = document.querySelector('#m-copia-linia .btn-primary');
+  btn.innerHTML = '<span class="spin"></span> Copiant…';
+  btn.disabled = true;
+
+  try {
+    // 1. Assegura Resum Diari
+    const resumId = await ensureResum(dateStr);
+
+    // 2. Busca o crea l'Àpat destí
+    const apatsRes = await nQuery(DB_APATS, {
+      and: [
+        { property: 'Data',      date:   { equals: dateStr } },
+        { property: 'Categoria', select: { equals: tipusAp } },
+      ]
+    });
+    let apatId;
+    if (apatsRes.results?.length) {
+      apatId = apatsRes.results[0].id;
+    } else {
+      const dayNames = ['Dg','Dl','Dt','Dc','Dj','Dv','Ds'];
+      const d = new Date(dateStr + 'T12:00:00');
+      const nomAp = tipusAp + ' ' + dayNames[d.getDay()] + ' ' + d.getDate() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+      const nouAp = await nCreate({
+        parent: { database_id: DB_APATS },
+        properties: {
+          'Nom':         { title: [{ text: { content: nomAp } }] },
+          'Data':        { date: { start: dateStr } },
+          'Categoria':   { select: { name: tipusAp } },
+          'Resum diari': { relation: [{ id: resumId }] },
+        }
+      });
+      apatId = nouAp.id;
+    }
+
+    // 3. Crea la línia copiada amb la quantitat (i macros) ajustats
+    const l = _copiaLinia;
+    const f = l.qty > 0 ? newQty / l.qty : 1;
+    const props = {
+      'Descripció':    { title: [{ text: { content: l.nom } }] },
+      'Àpat':          { relation: [{ id: apatId }] },
+      'Quantitat (g)': { number: newQty },
+      'kcal':          { number: Math.round(l.kcal  * f) },
+      'Prot (g)':      { number: Math.round(l.prot  * f * 10) / 10 },
+      'Greix (g)':     { number: Math.round(l.greix * f * 10) / 10 },
+      'Carbs (g)':     { number: Math.round(l.carbs * f * 10) / 10 },
+      'Fibra (g)':     { number: Math.round(l.fibra * f * 10) / 10 },
+    };
+    if (l.alimentId) props['Aliment'] = { relation: [{ id: l.alimentId }] };
+    await nCreate({ parent: { database_id: DB_LINIES }, properties: props });
+
+    toast(`✅ "${l.nom}" copiat a ${tipusAp} del ${dateStr}`, 'ok');
+    closeCopiaLinia();
+
+    // Refresca si és avui
+    if (dateStr === todayISO()) loadToday();
+
+  } catch(e) {
+    toast('❌ Error: ' + e.message, 'err');
+  } finally {
+    btn.innerHTML = '📋 Copiar';
+    btn.disabled = false;
+  }
+}
+
+// ── TOAST ─────────────────────────────────────────────
+let toastT;
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => t.className = 'toast', 3500);
+}
+</script>
+
+</body>
+</html>
