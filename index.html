@@ -1907,7 +1907,8 @@ async function saveScan() {
     await createLinia(apatId, alimentId, `${productName} ${qty}g`, qty, macros);
 
     const productName2 = document.getElementById('p-name').value.trim() || product.name;
-    toast(`✅ ${productName2} afegit! (${macros.kcal} kcal)`, 'ok');
+    toast(`✅ ${productName2} afegit a ${m}! (${macros.kcal} kcal)`, 'ok');
+    loadToday();
     setTimeout(resetScan, 1500);
   } catch(e) {
     toast('❌ ' + e.message, 'err');
@@ -1980,6 +1981,7 @@ async function saveText() {
     }
 
     toast(`✅ ${items.length} aliment(s) afegit(s)!`, 'ok');
+    loadToday();
     _platPorcioFactor = 1; // reset ració
     document.getElementById('nl-input').value = '';
     clearText();
