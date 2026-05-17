@@ -4221,10 +4221,15 @@ async function uploadToPostimage(base64, mime) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ base64, mime, gallery: 'GpkDSFv' }),
   });
-  if (!r.ok) throw new Error('Worker HTTP ' + r.status);
-  const data = await r.json();
-  if (data.error) throw new Error('PI error: ' + data.error);
-  if (!data.url) throw new Error('Resposta PI: ' + JSON.stringify(data).slice(0, 120));
+  // Llegim el body sempre — el worker retorna 200 fins i tot quan hi ha error
+  let data;
+  try { data = await r.json(); }
+  catch(_) { throw new Error('Resposta worker no és JSON (HTTP ' + r.status + ')'); }
+  if (data.error) {
+    const det = [data.error, data.stack?.slice(0,100), data.raw?.slice(0,80)].filter(Boolean).join(' | ');
+    throw new Error(det);
+  }
+  if (!data.url) throw new Error('PostImage no ha retornat URL. Resp: ' + JSON.stringify(data).slice(0, 150));
   return data.url;
 }
 
@@ -4239,244 +4244,98 @@ function resetFoto() {
   document.getElementById('foto-save-section').style.display = 'none';
 }
 
-// ── HISTORIAL DE LÍNIES ──────────────────────────────
-let _linHistAlimentId  = null;
-let _linHistAlimentNom = null;
-let _linCercaTimer     = null;
+// ── HISTORIAL DE LÍNIES ────────────────────
 
-async function linCercaInput() {
-  clearTimeout(_linCercaTimer);
-  const q   = document.getElementById('lin-cerca').value.trim();
+let _linAlimentId   = null;
+let _linAlimentName = '';
+let _linDebounce    = null;
+
+function linCercaInput() {
+  const q = document.getElementById('lin-cerca').value.trim();
   const sug = document.getElementById('lin-suggeriments');
-  const res = document.getElementById('lin-resultats');
-  if (q.length < 2) { sug.innerHTML = ''; res.innerHTML = ''; return; }
-  _linCercaTimer = setTimeout(async () => {
-    sug.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:4px 2px">⏳ Cercant…</div>';
+  if (_linDebounce) clearTimeout(_linDebounce);
+  if (q.length < 2) { sug.innerHTML = ''; return; }
+  _linDebounce = setTimeout(async () => {
     try {
-      const r = await nQueryFull(DB_ALIMENTS, {
+      const res = await nQuery(DB_ALIMENTS, {
         filter: { property: 'Nom', title: { contains: q } },
         sorts:  [{ property: 'Nom', direction: 'ascending' }],
-        page_size: 15,
+        page_size: 12
       });
-      const aliments = (r.results || []).map(pg => ({
-        id:  pg.id,
-        nom: pg.properties['Nom']?.title?.[0]?.plain_text || '—',
-      }));
-      if (!aliments.length) {
-        sug.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:4px 2px">Cap aliment trobat</div>';
-        return;
-      }
-      sug.innerHTML = aliments.map(a =>
-        '<button onclick="linSelAliment(\'' + a.id + '\',\'' + a.nom.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')" '
-        + 'style="display:block;width:100%;text-align:left;padding:9px 13px;margin-bottom:4px;'
-        + 'background:var(--card);border:1px solid var(--border);border-radius:10px;'
-        + 'font-size:14px;cursor:pointer;color:var(--text)">' + a.nom + '</button>'
-      ).join('');
-    } catch(e) {
-      sug.innerHTML = '<div style="color:var(--red);font-size:13px">Error: ' + e.message + '</div>';
-    }
-  }, 380);
+      if (!res.results?.length) { sug.innerHTML = '<div style="color:#888;font-size:13px;padding:4px">Cap resultat</div>'; return; }
+      sug.innerHTML = res.results.map(p => {
+        const nom = p.properties?.Nom?.title?.[0]?.plain_text || '?';
+        const id  = p.id;
+        return `<div onclick="linSelAliment('${id}','${nom.replace(/'/g,"\'")}')"`
+          + ` style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);font-size:14px">`
+          + nom + '</div>';
+      }).join('');
+    } catch(e) { sug.innerHTML = '<div style="color:red;font-size:13px">Error: ' + e.message + '</div>'; }
+  }, 350);
 }
 
-async function linSelAliment(alimentId, alimentNom) {
-  _linHistAlimentId  = alimentId;
-  _linHistAlimentNom = alimentNom;
-  document.getElementById('lin-cerca').value = alimentNom;
+async function linSelAliment(id, name) {
+  _linAlimentId   = id;
+  _linAlimentName = name;
+  document.getElementById('lin-cerca').value       = name;
   document.getElementById('lin-suggeriments').innerHTML = '';
-  await linShowResultats(alimentId, alimentNom);
+  document.getElementById('lin-resultats').innerHTML = '<div style="text-align:center;padding:20px">⏳ Carregant…</div>';
+  await linShowResultats();
 }
 
-async function linShowResultats(alimentId, alimentNom) {
-  const el = document.getElementById('lin-resultats');
-  el.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 2px">⏳ Carregant línies…</div>';
+async function linShowResultats() {
+  const cont = document.getElementById('lin-resultats');
+  if (!_linAlimentId) { cont.innerHTML = ''; return; }
   try {
-    const res = await nQueryFull(DB_LINIES, {
-      filter: { property: 'Aliment', relation: { contains: alimentId } },
-      page_size: 100,
+    // Fetch all lines for this aliment
+    const linies = await nQueryFull(DB_LINIES, {
+      filter: { property: 'Aliment', relation: { contains: _linAlimentId } },
+      sorts:  [{ timestamp: 'created_time', direction: 'descending' }],
     });
-    const rawLinies = res.results || [];
-    if (!rawLinies.length) {
-      el.innerHTML = '<div class="card" style="color:var(--text3);text-align:center;padding:20px 14px">Cap línia trobada per "<b>' + alimentNom + '</b>"</div>';
-      return;
-    }
+    if (!linies.length) { cont.innerHTML = '<div class="card" style="color:#888;text-align:center">Cap línia trobada</div>'; return; }
 
-    // Recull Àpat IDs únics
-    const apatIds = [];
-    for (const pg of rawLinies) {
-      const aid = pg.properties['Àpat']?.relation?.[0]?.id;
-      if (aid && !apatIds.includes(aid)) apatIds.push(aid);
-    }
+    // Fetch apat pages for dates (batch, unique IDs)
+    const apatIds = [...new Set(linies.map(l => l.properties?.['Àpat']?.relation?.[0]?.id).filter(Boolean))];
+    const apatMap = {};
+    await Promise.all(apatIds.map(async aid => {
+      try {
+        const p = await nGetPage(aid);
+        const data = p.properties?.Data?.date?.start || '';
+        const tipus = p.properties?.Tipus?.select?.name || '';
+        apatMap[aid] = { data, tipus };
+      } catch(_) { apatMap[aid] = { data: '?', tipus: '?' }; }
+    }));
 
-    // Fetch de totes les pàgines d'Àpat en paral·lel
-    const apatPgs = await Promise.all(apatIds.map(id => nGetPage(id).catch(() => null)));
-    const apatById = {};
-    for (const ap of apatPgs) {
-      if (!ap) continue;
-      apatById[ap.id] = {
-        data:      ap.properties?.['Data']?.date?.start || '',
-        categoria: ap.properties?.['Categoria']?.select?.name || '?',
-      };
-    }
-
-    // Construeix linies amb data i categoria
-    const linies = rawLinies.map(pg => {
-      const pp     = pg.properties;
-      const apatId = pp['Àpat']?.relation?.[0]?.id || '';
-      const info   = apatById[apatId] || { data: '', categoria: '?' };
-      return {
-        id:        pg.id,
-        nom:       alimentNom,
-        alimentId: alimentId,
-        kcal:      pp['kcal']?.number           || 0,
-        prot:      pp['Prot (g)']?.number       || 0,
-        greix:     pp['Greix (g)']?.number      || 0,
-        carbs:     pp['Carbs (g)']?.number      || 0,
-        fibra:     pp['Fibra (g)']?.number      || 0,
-        qty:       pp['Quantitat (g)']?.number  || 0,
-        data:      info.data,
-        categoria: info.categoria,
-      };
-    });
-
-    // Ordena per data descendent
-    linies.sort((a, b) => (b.data || '').localeCompare(a.data || ''));
-
-    const html = linies.map(l => {
-      const lid   = l.id.replace(/-/g, '');
-      const elId  = 'lin-hist-' + lid;
-      const dParts = l.data ? l.data.split('-') : null;
-      const dataFmt = dParts ? dParts[2] + '/' + dParts[1] + '/' + dParts[0] : '?';
-      const safNom  = l.nom.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      return '<div class="card" style="padding:11px 14px;margin-bottom:8px">'
-        + '<div style="display:flex;justify-content:space-between;align-items:center">'
-        +   '<div style="flex:1;min-width:0">'
-        +     '<div style="font-size:12px;color:var(--text3);margin-bottom:4px">'
-        +       dataFmt + ' · <span style="font-weight:600;color:var(--text2)">' + l.categoria + '</span>'
-        +     '</div>'
-        +     '<div id="qty-sub-' + lid + '" style="font-size:13px;color:var(--text2)">'
-        +       '<span onclick="startEditQty(\'' + l.id + '\',' + l.qty + ',' + l.kcal + ',' + l.prot + ',' + l.greix + ',' + l.carbs + ',' + l.fibra + ',\'' + elId + '\')" '
-        +         'style="cursor:pointer;border-bottom:1px dotted var(--blue);color:var(--blue);font-weight:600">'
-        +         Math.round(l.qty) + 'g</span>'
-        +       ' · ' + Math.round(l.kcal) + ' kcal'
-        +     '</div>'
-        +   '</div>'
-        +   '<button onclick="obrirCopiaLinia(\'' + l.id + '\',\'' + safNom + '\',' + l.qty + ',' + l.kcal + ',' + l.prot + ',' + l.greix + ',' + l.carbs + ',' + l.fibra + ',\'' + l.alimentId + '\')" '
-        +     'style="background:none;border:none;cursor:pointer;font-size:17px;opacity:0.55;padding:4px 6px;flex-shrink:0" title="Copiar a un altre àpat">📋</button>'
-        + '</div>'
-        + '</div>';
+    cont.innerHTML = linies.map(l => {
+      const lid  = l.id;
+      const desc = l.properties?.Descripció?.title?.[0]?.plain_text || '';
+      const qty  = l.properties?.['Quantitat (g)']?.number ?? '';
+      const kcal = l.properties?.['Energia (kcal)']?.number ?? '';
+      const prot = l.properties?.['Proteïna (g)']?.number ?? '';
+      const grx  = l.properties?.['Greix (g)']?.number ?? '';
+      const carbs= l.properties?.['Carbohidrats (g)']?.number ?? '';
+      const apatId= l.properties?.['Àpat']?.relation?.[0]?.id || '';
+      const apat  = apatMap[apatId] || {};
+      const dataStr= apat.data || '?';
+      const tipus = apat.tipus || '';
+      return `<div class="card" style="margin-bottom:8px" id="lincard-${lid}">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+    <span style="font-weight:600;font-size:14px">${desc||_linAlimentName}</span>
+    <span style="font-size:12px;color:#888">${dataStr} ${tipus}</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr auto auto;gap:4px;align-items:center;font-size:13px">
+    <span id="lin-hist-sub-${lid}">
+      <span onclick="startEditQty('lin-hist-${lid}','${lid}',${qty})" style="cursor:pointer;text-decoration:underline dotted">${qty}g</span>
+      · ${kcal} kcal · P${prot} G${grx} C${carbs}
+    </span>
+    <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px" onclick="obrirCopiaLinia('${lid}','${desc||_linAlimentName}',${qty},${kcal},${prot},${grx},${carbs},'${apatId}')">📋</button>
+  </div>
+</div>`;
     }).join('');
-
-    el.innerHTML = '<div style="font-size:12px;color:var(--text3);margin-bottom:6px;padding-left:2px">'
-      + linies.length + (linies.length === 1 ? ' línia' : ' línies')
-      + ' de <b style="color:var(--text2)">' + alimentNom + '</b></div>'
-      + html;
-
   } catch(e) {
-    el.innerHTML = '<div style="color:var(--red);font-size:13px;padding:8px">Error: ' + e.message + '</div>';
+    cont.innerHTML = '<div class="card" style="color:red">Error: ' + e.message + '</div>';
   }
 }
-
-// ── COPIAR LÍNIA ──────────────────────────────────────
-let _copiaLinia = null; // { id, nom, qty, kcal, prot, greix, carbs, fibra, alimentId }
-
-function obrirCopiaLinia(id, nom, qty, kcal, prot, greix, carbs, fibra, alimentId) {
-  _copiaLinia = { id, nom, qty, kcal, prot, greix, carbs, fibra, alimentId };
-  document.getElementById('m-copia-nom').textContent = nom + ' · ' + Math.round(qty) + 'g · ' + Math.round(kcal) + ' kcal';
-  document.getElementById('copia-qty').value = Math.round(qty);
-  document.getElementById('copia-data').value = todayISO();
-  meal['copia'] = 'Esmorzar';
-  document.querySelectorAll('#mg-copia .meal-chip').forEach((b, i) => b.classList.toggle('active', i === 0));
-  document.getElementById('m-copia-linia').classList.add('open');
-}
-
-function closeCopiaLinia() {
-  document.getElementById('m-copia-linia').classList.remove('open');
-}
-
-async function confirmarCopiaLinia() {
-  if (!_copiaLinia) return;
-  const dateStr  = document.getElementById('copia-data').value;
-  const tipusAp  = meal['copia'] || 'Esmorzar';
-  if (!dateStr) { toast('Selecciona una data', 'err'); return; }
-
-  // Llegeix la quantitat del camp (pot diferir de l'original)
-  const newQty = parseFloat(document.getElementById('copia-qty').value);
-  if (!newQty || newQty <= 0) { toast('Quantitat no vàlida', 'err'); return; }
-
-  const btn = document.querySelector('#m-copia-linia .btn-primary');
-  btn.innerHTML = '<span class="spin"></span> Copiant…';
-  btn.disabled = true;
-
-  try {
-    // 1. Assegura Resum Diari
-    const resumId = await ensureResum(dateStr);
-
-    // 2. Busca o crea l'Àpat destí
-    const apatsRes = await nQuery(DB_APATS, {
-      and: [
-        { property: 'Data',      date:   { equals: dateStr } },
-        { property: 'Categoria', select: { equals: tipusAp } },
-      ]
-    });
-    let apatId;
-    if (apatsRes.results?.length) {
-      apatId = apatsRes.results[0].id;
-    } else {
-      const dayNames = ['Dg','Dl','Dt','Dc','Dj','Dv','Ds'];
-      const d = new Date(dateStr + 'T12:00:00');
-      const nomAp = tipusAp + ' ' + dayNames[d.getDay()] + ' ' + d.getDate() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
-      const nouAp = await nCreate({
-        parent: { database_id: DB_APATS },
-        properties: {
-          'Nom':         { title: [{ text: { content: nomAp } }] },
-          'Data':        { date: { start: dateStr } },
-          'Categoria':   { select: { name: tipusAp } },
-          'Resum diari': { relation: [{ id: resumId }] },
-        }
-      });
-      apatId = nouAp.id;
-    }
-
-    // 3. Crea la línia copiada amb la quantitat (i macros) ajustats
-    const l = _copiaLinia;
-    const f = l.qty > 0 ? newQty / l.qty : 1;
-    const props = {
-      'Descripció':    { title: [{ text: { content: l.nom } }] },
-      'Àpat':          { relation: [{ id: apatId }] },
-      'Quantitat (g)': { number: newQty },
-      'kcal':          { number: Math.round(l.kcal  * f) },
-      'Prot (g)':      { number: Math.round(l.prot  * f * 10) / 10 },
-      'Greix (g)':     { number: Math.round(l.greix * f * 10) / 10 },
-      'Carbs (g)':     { number: Math.round(l.carbs * f * 10) / 10 },
-      'Fibra (g)':     { number: Math.round(l.fibra * f * 10) / 10 },
-    };
-    if (l.alimentId) props['Aliment'] = { relation: [{ id: l.alimentId }] };
-    await nCreate({ parent: { database_id: DB_LINIES }, properties: props });
-
-    toast(`✅ "${l.nom}" copiat a ${tipusAp} del ${dateStr}`, 'ok');
-    closeCopiaLinia();
-
-    // Refresca si és avui
-    if (dateStr === todayISO()) loadToday();
-
-  } catch(e) {
-    toast('❌ Error: ' + e.message, 'err');
-  } finally {
-    btn.innerHTML = '📋 Copiar';
-    btn.disabled = false;
-  }
-}
-
-// ── TOAST ─────────────────────────────────────────────
-let toastT;
-function toast(msg, type='') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (type ? ' ' + type : '');
-  clearTimeout(toastT);
-  toastT = setTimeout(() => t.className = 'toast', 3500);
-}
-</script>
-
+  </script>
 </body>
 </html>
