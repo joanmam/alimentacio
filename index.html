@@ -4197,8 +4197,9 @@ async function saveFoto() {
       } else {
         toast(`✅ ${_fotoItems.length} aliment(s) afegit(s) a ${m}!`, 'ok');
       }
-    } catch(_) {
-      toast(`✅ ${_fotoItems.length} aliment(s) afegit(s) a ${m}!`, 'ok');
+    } catch(uploadErr) {
+      console.warn('PostImage upload error:', uploadErr);
+      toast(`✅ ${_fotoItems.length} aliment(s) afegits. Foto no pujada: ${uploadErr.message}`, 'ok');
     }
     loadToday();
     resetFoto();
@@ -4211,23 +4212,18 @@ async function saveFoto() {
 }
 
 async function uploadToPostimage(base64, mime) {
-  // Converteix base64 → Blob
-  const byteStr = atob(base64);
-  const arr = new Uint8Array(byteStr.length);
-  for (let i = 0; i < byteStr.length; i++) arr[i] = byteStr.charCodeAt(i);
-  const blob = new Blob([arr], { type: mime });
+  // Enruta pel Cloudflare Worker per evitar CORS
+  const workerBase = (cfg.proxyUrl || '').replace(/\/$/, '');
+  if (!workerBase) throw new Error('Cal configurar la URL del Worker a Settings');
 
-  const fd = new FormData();
-  fd.append('upload', blob, 'foto.jpg');
-  fd.append('optsize', '0');
-  fd.append('gallery', 'GpkDSFv');
-
-  const r = await fetch('https://postimages.org/json/rr', {
+  const r = await fetch(workerBase + '/postimage', {
     method: 'POST',
-    body: fd,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ base64, mime, gallery: 'GpkDSFv' }),
   });
-  if (!r.ok) throw new Error('PostImage HTTP ' + r.status);
+  if (!r.ok) throw new Error('Worker PostImage HTTP ' + r.status);
   const data = await r.json();
+  if (data.error) throw new Error(data.error);
   return data?.url || null;
 }
 
