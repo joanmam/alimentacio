@@ -4221,10 +4221,11 @@ async function uploadToPostimage(base64, mime) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ base64, mime, gallery: 'GpkDSFv' }),
   });
-  if (!r.ok) throw new Error('Worker PostImage HTTP ' + r.status);
+  if (!r.ok) throw new Error('Worker HTTP ' + r.status);
   const data = await r.json();
-  if (data.error) throw new Error(data.error);
-  return data?.url || null;
+  if (data.error) throw new Error('PI error: ' + data.error);
+  if (!data.url) throw new Error('Resposta PI: ' + JSON.stringify(data).slice(0, 120));
+  return data.url;
 }
 
 function resetFoto() {
