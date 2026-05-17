@@ -1017,8 +1017,13 @@
     <div id="foto-preview" style="display:none;margin-top:12px;position:relative">
       <img id="foto-img" style="width:100%;border-radius:10px;max-height:260px;object-fit:cover">
     </div>
+    <div id="foto-pista-section" style="display:none;margin-top:12px">
+      <label class="lbl">Pista per a Claude (opcional)</label>
+      <textarea id="foto-pista" rows="2" placeholder="Ex: Arròs tres delicias. URL recepta, ingredients principals, nom del plat…"
+        style="font-size:13px;resize:vertical"></textarea>
+    </div>
     <button class="btn btn-primary" id="btn-analitza-foto" onclick="analitzarFoto()"
-      style="display:none;margin-top:12px">🧠 Analitzar amb Claude</button>
+      style="display:none;margin-top:10px">🧠 Analitzar amb Claude</button>
   </div>
 
   <div id="foto-resultats"></div>
@@ -4029,6 +4034,7 @@ function fotoSeleccionada(input) {
   const img = document.getElementById('foto-img');
   img.src = url;
   document.getElementById('foto-preview').style.display = 'block';
+  document.getElementById('foto-pista-section').style.display = 'block';
   document.getElementById('btn-analitza-foto').style.display = 'flex';
   document.getElementById('foto-resultats').innerHTML = '';
   document.getElementById('foto-save-section').style.display = 'none';
@@ -4062,10 +4068,12 @@ async function analitzarFoto() {
   btn.innerHTML = '<span class="spin"></span> Analitzant…';
   btn.disabled = true;
 
+  const pista = document.getElementById('foto-pista').value.trim();
+  const pistaText = pista ? `\nInformació addicional sobre el plat: ${pista}` : '';
   const prompt = `Ets un expert en nutrició. Analitza aquesta foto d'un plat de menjar.
 El dit índex visible a la foto mesura aproximadament 7 cm i serveix com a referència de mida per estimar les quantitats.
 Identifica tots els aliments i ingredients visibles, estima les quantitats en grams usant el dit com a escala.
-Calcula els macronutrients per a les quantitats estimades usant valors nutricionals estàndard.
+Calcula els macronutrients per a les quantitats estimades usant valors nutricionals estàndard.${pistaText}
 Retorna ÚNICAMENT un JSON array sense cap explicació ni markdown.
 Format: [{"nom":"string","quantitat_g":number,"kcal":number,"proteina_g":number,"greix_g":number,"carbs_g":number,"fibra_g":number}]`;
 
@@ -4189,7 +4197,9 @@ async function saveFoto() {
 function resetFoto() {
   _fotoItems = []; _fotoBase64 = null;
   document.getElementById('foto-input').value = '';
+  document.getElementById('foto-pista').value = '';
   document.getElementById('foto-preview').style.display = 'none';
+  document.getElementById('foto-pista-section').style.display = 'none';
   document.getElementById('btn-analitza-foto').style.display = 'none';
   document.getElementById('foto-resultats').innerHTML = '';
   document.getElementById('foto-save-section').style.display = 'none';
