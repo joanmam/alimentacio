@@ -4278,7 +4278,7 @@ function linCercaInput() {
   if (q.length < 2) { sug.innerHTML = ''; return; }
   _linDebounce = setTimeout(async () => {
     try {
-      const res = await nQuery(DB_ALIMENTS, {
+      const res = await nQueryFull(DB_ALIMENTS, {
         filter: { property: 'Nom', title: { contains: q } },
         sorts:  [{ property: 'Nom', direction: 'ascending' }],
         page_size: 12
