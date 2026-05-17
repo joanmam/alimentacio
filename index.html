@@ -4183,7 +4183,23 @@ async function saveFoto() {
       const { id: alimentId } = await ensureAliment(it.nom, per100);
       await createLinia(apatId, alimentId, `${it.nom} ${it.quantitat_g}g`, it.quantitat_g, macros);
     }
-    toast(`✅ ${_fotoItems.length} aliment(s) afegit(s) a ${m}!`, 'ok');
+    // Intenta pujar la foto a PostImage i desar la URL al Resum Diari
+    try {
+      toast('📸 Pujant foto a PostImage…');
+      const imgUrl = await uploadToPostimage(_fotoBase64, _fotoMime);
+      if (imgUrl) {
+        const pista = document.getElementById('foto-pista').value.trim();
+        const nota = (pista ? pista + ' — ' : '') + imgUrl;
+        await nPatch(resumId, {
+          'Notes': { rich_text: [{ text: { content: nota } }] }
+        });
+        toast(`✅ ${_fotoItems.length} aliment(s) afegits! Foto: ${imgUrl}`, 'ok');
+      } else {
+        toast(`✅ ${_fotoItems.length} aliment(s) afegit(s) a ${m}!`, 'ok');
+      }
+    } catch(_) {
+      toast(`✅ ${_fotoItems.length} aliment(s) afegit(s) a ${m}!`, 'ok');
+    }
     loadToday();
     resetFoto();
   } catch(e) {
@@ -4192,6 +4208,27 @@ async function saveFoto() {
     btn.innerHTML = '➕ Afegir a àpat';
     btn.disabled = false;
   }
+}
+
+async function uploadToPostimage(base64, mime) {
+  // Converteix base64 → Blob
+  const byteStr = atob(base64);
+  const arr = new Uint8Array(byteStr.length);
+  for (let i = 0; i < byteStr.length; i++) arr[i] = byteStr.charCodeAt(i);
+  const blob = new Blob([arr], { type: mime });
+
+  const fd = new FormData();
+  fd.append('upload', blob, 'foto.jpg');
+  fd.append('optsize', '0');
+  fd.append('gallery', 'GpkDSFv');
+
+  const r = await fetch('https://postimages.org/json/rr', {
+    method: 'POST',
+    body: fd,
+  });
+  if (!r.ok) throw new Error('PostImage HTTP ' + r.status);
+  const data = await r.json();
+  return data?.url || null;
 }
 
 function resetFoto() {
