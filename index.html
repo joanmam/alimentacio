@@ -4165,13 +4165,14 @@ async function saveFoto() {
     const apatId  = await createApat(dateStr, m, resumId);
     for (const it of _fotoItems) {
       const macros = { kcal: it.kcal, prot: it.proteina_g, greix: it.greix_g, carbs: it.carbs_g, fibra: it.fibra_g || 0 };
-      const alimentId = await ensureAlimentByName(it.nom, {
-        kcal: Math.round(it.kcal * 100 / it.quantitat_g),
-        prot: Math.round(it.proteina_g * 100 / it.quantitat_g * 10) / 10,
+      const per100 = {
+        kcal:  Math.round(it.kcal * 100 / it.quantitat_g),
+        prot:  Math.round(it.proteina_g * 100 / it.quantitat_g * 10) / 10,
         greix: Math.round(it.greix_g * 100 / it.quantitat_g * 10) / 10,
         carbs: Math.round(it.carbs_g * 100 / it.quantitat_g * 10) / 10,
         fibra: Math.round((it.fibra_g||0) * 100 / it.quantitat_g * 10) / 10,
-      });
+      };
+      const { id: alimentId } = await ensureAliment(it.nom, per100);
       await createLinia(apatId, alimentId, `${it.nom} ${it.quantitat_g}g`, it.quantitat_g, macros);
     }
     toast(`✅ ${_fotoItems.length} aliment(s) afegit(s) a ${m}!`, 'ok');
