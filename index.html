@@ -4309,10 +4309,12 @@ async function linShowResultats() {
   if (!_linAlimentId) { cont.innerHTML = ''; return; }
   try {
     // Fetch all lines for this aliment
-    const linies = await nQueryFull(DB_LINIES, {
+    const liniesRes = await nQueryFull(DB_LINIES, {
       filter: { property: 'Aliment', relation: { contains: _linAlimentId } },
-      sorts:  [{ timestamp: 'created_time', direction: 'descending' }],
+      sorts:  [{ property: 'Descripció', direction: 'descending' }],
     });
+    if (liniesRes.object === 'error') throw new Error(liniesRes.message || JSON.stringify(liniesRes));
+    const linies = liniesRes.results || [];
     if (!linies.length) { cont.innerHTML = '<div class="card" style="color:#888;text-align:center">Cap línia trobada</div>'; return; }
 
     // Fetch apat pages for dates (batch, unique IDs)
