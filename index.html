@@ -1358,6 +1358,17 @@ function checkRecipeImport() {
 function ls(k) { return localStorage.getItem(k) || ''; }
 function lsSet(k, v) { localStorage.setItem(k, v); }
 
+// ── TOAST ─────────────────────────────────────────────
+let _toastTimer = null;
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'toast show' + (type ? ' ' + type : '');
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { el.className = 'toast'; }, 4000);
+}
+
 function todayISO() { return new Date().toISOString().split('T')[0]; }
 
 function setDates() {
