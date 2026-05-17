@@ -1148,6 +1148,12 @@
       <div class="hint">URL del teu Cloudflare Worker que fa de proxy per a Notion. <a href="https://workers.cloudflare.com" target="_blank">Crea'l gratis aquí</a>.</div>
     </div>
 
+    <div class="form-group">
+      <label class="lbl">imgbb API Key (fotos 📸)</label>
+      <input type="password" id="s-imgbb" placeholder="…" autocomplete="off">
+      <div class="hint">Clau per pujar fotos de plats. Obté-la gratis a <a href="https://api.imgbb.com" target="_blank">api.imgbb.com</a> (registra't → API Key).</div>
+    </div>
+
     <div class="divider"></div>
     <div class="modal-title" style="font-size:15px;margin-bottom:12px">📱 Preferències</div>
 
@@ -1293,6 +1299,7 @@ let cfg = {
   notionToken: ls('notionToken'),
   claudeKey:   ls('claudeKey'),
   proxyUrl:    ls('proxyUrl') || '',
+  imgbbKey:    ls('imgbbKey') || '',
 };
 let meal = { scan: 'Esmorzar', text: 'Esmorzar' };
 let product = null;    // current scanned product
@@ -3707,6 +3714,7 @@ function openSettings() {
   document.getElementById('s-notion').value = cfg.notionToken;
   document.getElementById('s-claude').value = cfg.claudeKey;
   document.getElementById('s-proxy').value  = cfg.proxyUrl;
+  document.getElementById('s-imgbb').value  = cfg.imgbbKey;
   document.getElementById('s-default-tab').value = ls('defaultTab') || 'today';
   // Carregar valors actuals de Notion si tenim token
   document.getElementById('s-pes-obj').value   = '';
@@ -3728,9 +3736,11 @@ async function saveSettings() {
   cfg.notionToken = document.getElementById('s-notion').value.trim();
   cfg.claudeKey   = document.getElementById('s-claude').value.trim();
   cfg.proxyUrl    = document.getElementById('s-proxy').value.trim();
+  cfg.imgbbKey    = document.getElementById('s-imgbb').value.trim();
   lsSet('notionToken', cfg.notionToken);
   lsSet('claudeKey',   cfg.claudeKey);
   lsSet('proxyUrl',    cfg.proxyUrl);
+  lsSet('imgbbKey',    cfg.imgbbKey);
   lsSet('defaultTab',  document.getElementById('s-default-tab').value);
 
   // Actualitzar objectius a Notion si hi ha valors i token
@@ -4223,25 +4233,22 @@ async function saveFoto() {
 }
 
 async function uploadToPostimage(base64, mime) {
-  // Enruta pel Cloudflare Worker per evitar CORS
-  const workerBase = (cfg.proxyUrl || '').replace(/\/$/, '');
-  if (!workerBase) throw new Error('Cal configurar la URL del Worker a Settings');
+  // Usa imgbb.com directament des del navegador (no cal worker)
+  const key = cfg.imgbbKey;
+  if (!key) throw new Error('Cal configurar la imgbb API Key a ⚙️ Settings');
 
-  const r = await fetch(workerBase + '/postimage', {
+  const fd = new FormData();
+  fd.append('key', key);
+  fd.append('image', base64);  // base64 sense prefix data:
+  fd.append('name', 'plat_' + Date.now());
+
+  const r = await fetch('https://api.imgbb.com/1/upload', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ base64, mime, gallery: 'GpkDSFv' }),
+    body: fd,
   });
-  // Llegim el body sempre — el worker retorna 200 fins i tot quan hi ha error
-  let data;
-  try { data = await r.json(); }
-  catch(_) { throw new Error('Resposta worker no és JSON (HTTP ' + r.status + ')'); }
-  if (data.error) {
-    const det = [data.error, data.stack?.slice(0,100), data.raw?.slice(0,80)].filter(Boolean).join(' | ');
-    throw new Error(det);
-  }
-  if (!data.url) throw new Error('PostImage no ha retornat URL. Resp: ' + JSON.stringify(data).slice(0, 150));
-  return data.url;
+  const data = await r.json();
+  if (!data.success) throw new Error('imgbb: ' + JSON.stringify(data.error || data).slice(0,120));
+  return data.data.url;
 }
 
 function resetFoto() {
