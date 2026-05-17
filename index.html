@@ -4206,15 +4206,18 @@ async function saveFoto() {
     }
     // Intenta pujar la foto a PostImage i desar la URL al Resum Diari
     try {
-      toast('📸 Pujant foto a PostImage…');
+      toast('📸 Pujant foto a imgbb…');
       const imgUrl = await uploadToPostimage(_fotoBase64, _fotoMime);
       if (imgUrl) {
         const pista = document.getElementById('foto-pista').value.trim();
-        const nota = (pista ? pista + ' — ' : '') + imgUrl;
-        await nPatch(resumId, {
-          'Notes': { rich_text: [{ text: { content: nota } }] }
-        });
-        toast(`✅ ${_fotoItems.length} aliment(s) afegits! Foto: ${imgUrl}`, 'ok');
+        const notionProps = {
+          // Imatge visible a Notion (propietat Files & Media "Foto")
+          'Foto': { files: [{ name: 'plat.jpg', type: 'external', external: { url: imgUrl } }] },
+        };
+        // Si hi ha pista, la desa a Notes
+        if (pista) notionProps['Notes'] = { rich_text: [{ text: { content: pista } }] };
+        await nPatch(resumId, notionProps);
+        toast(`✅ ${_fotoItems.length} aliment(s) afegits! Foto desada 📸`, 'ok');
       } else {
         toast(`✅ ${_fotoItems.length} aliment(s) afegit(s) a ${m}!`, 'ok');
       }
