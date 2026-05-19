@@ -4377,6 +4377,12 @@ async function loadFotoHistorial() {
 
 let _copiaLinia = null; // { id, nom, qty, kcal, prot, greix, carbs, fibra, alimentId }
 
+function obrirCopiaLiniaById(lid) {
+  const d = window._liniesDataMap?.[lid];
+  if (!d) { toast('No s\'han trobat les dades de la línia', 'err'); return; }
+  obrirCopiaLinia(lid, d.nom, d.qty, d.kcal, d.prot, d.greix, d.carbs, d.fibra, d.alimentId);
+}
+
 function obrirCopiaLinia(id, nom, qty, kcal, prot, greix, carbs, fibraOrApatId, alimentId) {
   // Compatibilitat: des de Línies-tab el 8è param és apatId (string uuid), no fibra (number)
   let fibra = 0;
@@ -4513,15 +4519,19 @@ async function linShowResultats() {
       } catch(_) { apatMap[aid] = { data: '?', tipus: '?' }; }
     }));
 
+    // Mapa global per evitar problemes d'escapament en onclick
+    window._liniesDataMap = window._liniesDataMap || {};
     cont.innerHTML = linies.map(l => {
       const lid  = l.id;
       const desc = l.properties?.Descripció?.title?.[0]?.plain_text || '';
-      const qty  = l.properties?.['Quantitat (g)']?.number ?? '';
-      const kcal = l.properties?.['Energia (kcal)']?.number ?? '';
-      const prot = l.properties?.['Proteïna (g)']?.number ?? '';
-      const grx  = l.properties?.['Greix (g)']?.number ?? '';
-      const carbs= l.properties?.['Carbohidrats (g)']?.number ?? '';
+      const qty  = l.properties?.['Quantitat (g)']?.number ?? 0;
+      const kcal = l.properties?.['Energia (kcal)']?.number ?? 0;
+      const prot = l.properties?.['Proteïna (g)']?.number ?? 0;
+      const grx  = l.properties?.['Greix (g)']?.number ?? 0;
+      const carbs= l.properties?.['Carbohidrats (g)']?.number ?? 0;
       const apatId= l.properties?.['Àpat']?.relation?.[0]?.id || '';
+      // Desa les dades al mapa global
+      window._liniesDataMap[lid] = { nom: desc || _linAlimentName, qty, kcal, prot, greix: grx, carbs, fibra: 0, alimentId: _linAlimentId };
       const apat  = apatMap[apatId] || {};
       const dataStr= apat.data || '?';
       const tipus = apat.tipus || '';
@@ -4535,7 +4545,7 @@ async function linShowResultats() {
       <span onclick="startEditQty('lin-hist-${lid}','${lid}',${qty})" style="cursor:pointer;text-decoration:underline dotted">${qty}g</span>
       · ${kcal} kcal · P${prot} G${grx} C${carbs}
     </span>
-    <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px" onclick="obrirCopiaLinia('${lid}','${desc||_linAlimentName}',${qty},${kcal},${prot},${grx},${carbs},'${apatId}')">📋</button>
+    <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px" onclick="obrirCopiaLiniaById('${lid}')">📋</button>
   </div>
 </div>`;
     }).join('');
