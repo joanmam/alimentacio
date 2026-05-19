@@ -4373,6 +4373,82 @@ async function loadFotoHistorial() {
   }
 }
 
+// ── COPIAR LÍNIA ─────────────────────────────
+
+let _copiaLinia = null; // { id, nom, qty, kcal, prot, greix, carbs, fibra, alimentId }
+
+function obrirCopiaLinia(id, nom, qty, kcal, prot, greix, carbs, fibraOrApatId, alimentId) {
+  // Compatibilitat: des de Línies-tab el 8è param és apatId (string uuid), no fibra (number)
+  let fibra = 0;
+  if (typeof fibraOrApatId === 'number') {
+    fibra = fibraOrApatId;
+  }
+  _copiaLinia = { id, nom, qty: +qty, kcal: +kcal, prot: +prot, greix: +greix, carbs: +carbs, fibra, alimentId: alimentId || '' };
+
+  document.getElementById('m-copia-nom').textContent = nom;
+  document.getElementById('copia-qty').value = qty;
+  document.getElementById('copia-data').value = todayISO();
+
+  // Reset meal selector
+  document.querySelectorAll('#mg-copia .meal-chip').forEach(b => b.classList.remove('active'));
+  const first = document.querySelector('#mg-copia .meal-chip');
+  if (first) first.classList.add('active');
+  meal['copia'] = 'Esmorzar';
+
+  document.getElementById('m-copia-linia').classList.add('open');
+}
+
+function closeCopiaLinia() {
+  document.getElementById('m-copia-linia').classList.remove('open');
+  _copiaLinia = null;
+}
+
+async function confirmarCopiaLinia() {
+  if (!_copiaLinia) return;
+  const btn = document.querySelector('#m-copia-linia .btn-primary');
+  btn.innerHTML = '<span class="spin"></span> Copiant…';
+  btn.disabled = true;
+  try {
+    const newQty  = parseFloat(document.getElementById('copia-qty').value) || _copiaLinia.qty;
+    const dateStr = document.getElementById('copia-data').value || todayISO();
+    const m       = meal['copia'] || 'Esmorzar';
+    const f       = newQty / _copiaLinia.qty;
+
+    const macros = {
+      kcal:  Math.round(_copiaLinia.kcal  * f),
+      prot:  Math.round(_copiaLinia.prot  * f * 10) / 10,
+      greix: Math.round(_copiaLinia.greix * f * 10) / 10,
+      carbs: Math.round(_copiaLinia.carbs * f * 10) / 10,
+      fibra: Math.round(_copiaLinia.fibra * f * 10) / 10,
+    };
+
+    const resumId = await ensureResum(dateStr);
+    const apatId  = await createApat(dateStr, m, resumId);
+
+    // Recupera l'alimentId si no el tenim (cerca per nom)
+    let alimentId = _copiaLinia.alimentId;
+    if (!alimentId) {
+      const res = await nQueryFull(DB_ALIMENTS, {
+        filter: { property: 'Nom', title: { equals: _copiaLinia.nom } },
+        page_size: 1,
+      });
+      alimentId = res.results?.[0]?.id || '';
+    }
+
+    const desc = `${_copiaLinia.nom} ${newQty}g`;
+    await createLinia(apatId, alimentId, desc, newQty, macros);
+
+    toast(`✅ "${_copiaLinia.nom}" copiat a ${m} del ${dateStr}`, 'ok');
+    closeCopiaLinia();
+    if (dateStr === todayISO()) loadToday();
+  } catch(e) {
+    toast('❌ ' + e.message, 'err');
+  } finally {
+    btn.innerHTML = '📋 Copiar';
+    btn.disabled = false;
+  }
+}
+
 // ── HISTORIAL DE LÍNIES ────────────────────
 
 let _linAlimentId   = null;
