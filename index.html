@@ -4525,10 +4525,10 @@ async function linShowResultats() {
       const lid  = l.id;
       const desc = l.properties?.Descripció?.title?.[0]?.plain_text || '';
       const qty  = l.properties?.['Quantitat (g)']?.number ?? 0;
-      const kcal = l.properties?.['Energia (kcal)']?.number ?? 0;
-      const prot = l.properties?.['Proteïna (g)']?.number ?? 0;
+      const kcal = l.properties?.['kcal']?.number ?? 0;
+      const prot = l.properties?.['Prot (g)']?.number ?? 0;
       const grx  = l.properties?.['Greix (g)']?.number ?? 0;
-      const carbs= l.properties?.['Carbohidrats (g)']?.number ?? 0;
+      const carbs= l.properties?.['Carbs (g)']?.number ?? 0;
       const apatId= l.properties?.['Àpat']?.relation?.[0]?.id || '';
       // Desa les dades al mapa global
       window._liniesDataMap[lid] = { nom: desc || _linAlimentName, qty, kcal, prot, greix: grx, carbs, fibra: 0, alimentId: _linAlimentId };
