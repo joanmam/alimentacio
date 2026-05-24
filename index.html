@@ -2227,10 +2227,15 @@ async function loadToday() {
     let objKcal = 1658, objProt = 128, objGreix = 55, objCarbs = 162, objFibra = 25;
     if (resumRes.results?.length) {
       const p = resumRes.results[0].properties;
-      objKcal  = p['Kcal objectiu']?.formula?.number  || p['Kcal objectiu']?.rollup?.number  || p['Kcal']?.number  || objKcal;
-      objProt  = p['Prot objectiu']?.formula?.number  || p['Prot objectiu']?.rollup?.number  || p['Prot']?.number  || objProt;
-      objGreix = p['Greix objectiu']?.formula?.number || p['Greix objectiu']?.rollup?.number || p['Greix']?.number || objGreix;
-      objCarbs = p['Carbs objectiu']?.formula?.number || p['Carbs objectiu']?.rollup?.number || p['Carbs']?.number || objCarbs;
+      // DEBUG: log de les propietats del Resum Diari per diagnosticar
+      const kcalProp = p['Kcal objectiu'];
+      console.log('DEBUG Kcal objectiu prop:', JSON.stringify(kcalProp));
+      console.log('DEBUG totes les propietats:', Object.keys(p).join(', '));
+      objKcal  = p['Kcal objectiu']?.formula?.number  || p['Kcal objectiu']?.rollup?.number  || p['Kcal objectiu']?.number  || p['Kcal']?.number  || objKcal;
+      objProt  = p['Prot objectiu']?.formula?.number  || p['Prot objectiu']?.rollup?.number  || p['Prot objectiu']?.number  || p['Prot']?.number  || objProt;
+      objGreix = p['Greix objectiu']?.formula?.number || p['Greix objectiu']?.rollup?.number || p['Greix objectiu']?.number || p['Greix']?.number || objGreix;
+      objCarbs = p['Carbs objectiu']?.formula?.number || p['Carbs objectiu']?.rollup?.number || p['Carbs objectiu']?.number || p['Carbs']?.number || objCarbs;
+      console.log('DEBUG objKcal resultat:', objKcal);
     }
     todayObjKcal = objKcal; // global for exercise adjustment
     loadExercici(dateStr);  // load exercise from Notion for today
@@ -3358,10 +3363,10 @@ async function loadCerca() {
     let objKcal = 1658, objProt = 128, objGreix = 55, objCarbs = 162, objFibra = 25;
     if (resumRes.results?.length) {
       const p = resumRes.results[0].properties;
-      objKcal  = p['Kcal objectiu']?.formula?.number  || p['Kcal objectiu']?.rollup?.number  || p['Kcal']?.number  || objKcal;
-      objProt  = p['Prot objectiu']?.formula?.number  || p['Prot objectiu']?.rollup?.number  || p['Prot']?.number  || objProt;
-      objGreix = p['Greix objectiu']?.formula?.number || p['Greix objectiu']?.rollup?.number || p['Greix']?.number || objGreix;
-      objCarbs = p['Carbs objectiu']?.formula?.number || p['Carbs objectiu']?.rollup?.number || p['Carbs']?.number || objCarbs;
+      objKcal  = p['Kcal objectiu']?.formula?.number  || p['Kcal objectiu']?.rollup?.number  || p['Kcal objectiu']?.number  || p['Kcal']?.number  || objKcal;
+      objProt  = p['Prot objectiu']?.formula?.number  || p['Prot objectiu']?.rollup?.number  || p['Prot objectiu']?.number  || p['Prot']?.number  || objProt;
+      objGreix = p['Greix objectiu']?.formula?.number || p['Greix objectiu']?.rollup?.number || p['Greix objectiu']?.number || p['Greix']?.number || objGreix;
+      objCarbs = p['Carbs objectiu']?.formula?.number || p['Carbs objectiu']?.rollup?.number || p['Carbs objectiu']?.number || p['Carbs']?.number || objCarbs;
     }
 
     // Query àpats filtered by date (and categoria if not "Tots")
