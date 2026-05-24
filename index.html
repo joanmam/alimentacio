@@ -1216,6 +1216,7 @@
     </div>
 
     <button class="btn btn-primary" onclick="saveSettings()">💾 Desar</button>
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="testConnexio()">🔌 Verificar connexió Notion</button>
     <button class="btn btn-ghost" style="margin-top:8px" onclick="closeSettings()">Tancar</button>
     <div class="divider"></div>
     <button class="btn btn-ghost" style="margin-top:0;font-size:13px;color:var(--text3)" onclick="closeSettings();goPage('admin')">🔧 Neteja del catàleg d'aliments</button>
@@ -1779,14 +1780,28 @@ function clearText() {
 
 // ── NOTION API ────────────────────────────────────────
 async function nCall(path, method, body) {
+  if (!cfg.notionToken) throw new Error('Cal configurar el Notion Token a ⚙️ Configuració');
   const proxyUrl = cfg.proxyUrl || '/.netlify/functions/notion-proxy';
-  const r = await fetch(proxyUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ path, method: method || 'GET', body: body || null, token: cfg.notionToken }),
-  });
-  const data = await r.json();
-  if (!r.ok) throw new Error(data.message || data.error || `Notion ${r.status}`);
+  let r;
+  try {
+    r = await fetch(proxyUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path, method: method || 'GET', body: body || null, token: cfg.notionToken }),
+    });
+  } catch(netErr) {
+    throw new Error(`Error de xarxa al proxy (${proxyUrl}): ${netErr.message}`);
+  }
+  let data;
+  try {
+    data = await r.json();
+  } catch(_) {
+    throw new Error(`Resposta no-JSON del proxy (HTTP ${r.status}) — verifica la URL del proxy a ⚙️ Configuració`);
+  }
+  if (!r.ok) {
+    const msg = data.message || data.error || `Error Notion HTTP ${r.status}`;
+    throw new Error(`[${r.status}] ${msg}`);
+  }
   return data;
 }
 
@@ -2212,10 +2227,10 @@ async function loadToday() {
     let objKcal = 1658, objProt = 128, objGreix = 55, objCarbs = 162, objFibra = 25;
     if (resumRes.results?.length) {
       const p = resumRes.results[0].properties;
-      objKcal  = p['Kcal objectiu']?.formula?.number  || p['Kcal']?.number  || objKcal;
-      objProt  = p['Prot objectiu']?.formula?.number  || p['Prot']?.number  || objProt;
-      objGreix = p['Greix objectiu']?.formula?.number || p['Greix']?.number || objGreix;
-      objCarbs = p['Carbs objectiu']?.formula?.number || p['Carbs']?.number || objCarbs;
+      objKcal  = p['Kcal objectiu']?.formula?.number  || p['Kcal objectiu']?.rollup?.number  || p['Kcal']?.number  || objKcal;
+      objProt  = p['Prot objectiu']?.formula?.number  || p['Prot objectiu']?.rollup?.number  || p['Prot']?.number  || objProt;
+      objGreix = p['Greix objectiu']?.formula?.number || p['Greix objectiu']?.rollup?.number || p['Greix']?.number || objGreix;
+      objCarbs = p['Carbs objectiu']?.formula?.number || p['Carbs objectiu']?.rollup?.number || p['Carbs']?.number || objCarbs;
     }
     todayObjKcal = objKcal; // global for exercise adjustment
     loadExercici(dateStr);  // load exercise from Notion for today
@@ -3343,10 +3358,10 @@ async function loadCerca() {
     let objKcal = 1658, objProt = 128, objGreix = 55, objCarbs = 162, objFibra = 25;
     if (resumRes.results?.length) {
       const p = resumRes.results[0].properties;
-      objKcal  = p['Kcal objectiu']?.formula?.number  || p['Kcal']?.number  || objKcal;
-      objProt  = p['Prot objectiu']?.formula?.number  || p['Prot']?.number  || objProt;
-      objGreix = p['Greix objectiu']?.formula?.number || p['Greix']?.number || objGreix;
-      objCarbs = p['Carbs objectiu']?.formula?.number || p['Carbs']?.number || objCarbs;
+      objKcal  = p['Kcal objectiu']?.formula?.number  || p['Kcal objectiu']?.rollup?.number  || p['Kcal']?.number  || objKcal;
+      objProt  = p['Prot objectiu']?.formula?.number  || p['Prot objectiu']?.rollup?.number  || p['Prot']?.number  || objProt;
+      objGreix = p['Greix objectiu']?.formula?.number || p['Greix objectiu']?.rollup?.number || p['Greix']?.number || objGreix;
+      objCarbs = p['Carbs objectiu']?.formula?.number || p['Carbs objectiu']?.rollup?.number || p['Carbs']?.number || objCarbs;
     }
 
     // Query àpats filtered by date (and categoria if not "Tots")
@@ -3783,6 +3798,32 @@ async function saveSettings() {
   } else {
     closeSettings();
     toast('✅ Configuració desada', 'ok');
+  }
+}
+
+async function testConnexio() {
+  const tokenVal = document.getElementById('s-notion').value.trim();
+  const proxyVal = document.getElementById('s-proxy').value.trim();
+  if (!tokenVal) { toast('⚠️ Introdueix el Notion Token primer', 'err'); return; }
+  const proxyUrl = proxyVal || '/.netlify/functions/notion-proxy';
+  toast('🔌 Verificant connexió…');
+  try {
+    const r = await fetch(proxyUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: '/v1/users/me', method: 'GET', body: null, token: tokenVal }),
+    });
+    let data;
+    try { data = await r.json(); } catch(_) {
+      toast(`❌ Proxy no respon JSON (HTTP ${r.status}) — URL proxy incorrecta?`, 'err'); return;
+    }
+    if (r.ok) {
+      toast(`✅ Connexió OK — Token vàlid (${data.name || data.type || 'bot'})`, 'ok');
+    } else {
+      toast(`❌ Error ${r.status}: ${data.message || data.error || 'Desconegut'}`, 'err');
+    }
+  } catch(e) {
+    toast(`❌ Error de xarxa: ${e.message}`, 'err');
   }
 }
 
