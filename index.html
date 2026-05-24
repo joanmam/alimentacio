@@ -2222,32 +2222,31 @@ async function loadToday() {
   try {
     const dateStr = todayISO();
 
-    // 1. Get Resum Diari (objectives)
-    const resumRes = await nQuery(DB_RESUM, { property: 'Data', date: { equals: dateStr } });
+    // 1. Get Resum Diari + Configuració en paral·lel
+    const [resumRes, cfgPage] = await Promise.all([
+      nQuery(DB_RESUM, { property: 'Data', date: { equals: dateStr } }),
+      nGetPage(CONFIG_ID).catch(() => null),
+    ]);
     let objKcal = 1658, objProt = 128, objGreix = 55, objCarbs = 162, objFibra = 25;
-    if (resumRes.results?.length) {
-      const p = resumRes.results[0].properties;
-      // DEBUG: log de les propietats del Resum Diari per diagnosticar
-      const kcalProp = p['Kcal objectiu'];
-      console.log('DEBUG Kcal objectiu prop:', JSON.stringify(kcalProp));
-      console.log('DEBUG totes les propietats:', Object.keys(p).join(', '));
-      objKcal  = p['Kcal objectiu']?.formula?.number  || p['Kcal objectiu']?.rollup?.number  || p['Kcal objectiu']?.number  || p['Kcal']?.number  || objKcal;
-      objProt  = p['Prot objectiu']?.formula?.number  || p['Prot objectiu']?.rollup?.number  || p['Prot objectiu']?.number  || p['Prot']?.number  || objProt;
-      objGreix = p['Greix objectiu']?.formula?.number || p['Greix objectiu']?.rollup?.number || p['Greix objectiu']?.number || p['Greix']?.number || objGreix;
-      objCarbs = p['Carbs objectiu']?.formula?.number || p['Carbs objectiu']?.rollup?.number || p['Carbs objectiu']?.number || p['Carbs']?.number || objCarbs;
-      console.log('DEBUG objKcal resultat:', objKcal);
+    // Llegir objectius des de Configuració (fórmules) — font fiable
+    if (cfgPage?.properties) {
+      const cp = cfgPage.properties;
+      const readNum = (prop) => cp[prop]?.formula?.number ?? cp[prop]?.number ?? null;
+      objKcal  = readNum('Kcal objectiu')  ?? objKcal;
+      objProt  = readNum('Prot objectiu')  ?? objProt;
+      objGreix = readNum('Greix objectiu') ?? objGreix;
+      objCarbs = readNum('Carbs objectiu') ?? objCarbs;
     }
     todayObjKcal = objKcal; // global for exercise adjustment
     loadExercici(dateStr);  // load exercise from Notion for today
 
-    // 1b+1c. Pes real i objectiu en paral·lel → diff quan tots dos estan disponibles
+    // 1b. Pes real en paral·lel (cfgPage ja carregat a dalt)
     Promise.all([
       nQueryFull(DB_PES, {
         sorts: [{ property: 'Data registre', direction: 'descending' }],
         page_size: 1
       }).catch(() => null),
-      nGetPage(CONFIG_ID).catch(() => null),
-    ]).then(([pesRes, cfgPage]) => {
+    ]).then(([pesRes]) => {
       const pesReal = pesRes?.results?.[0]?.properties?.['Pes (kg)']?.number ?? null;
       const pesObj  = cfgPage?.properties?.['Pes objectiu']?.number ?? null;
       if (pesReal != null) {
