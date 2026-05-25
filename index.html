@@ -230,6 +230,13 @@
     .mg.open > .mg-header .mg-chevron { transform: rotate(180deg); }
     .mg-body { display: none; border-top: 1.5px solid var(--border); padding: 4px 14px 10px; }
     .mg.open > .mg-body { display: block; }
+    /* Select mode */
+    .linia-cb { display:none; margin-right:8px; min-width:17px; height:17px; cursor:pointer; accent-color:var(--red); flex-shrink:0; }
+    .mg.select-mode .linia-cb { display:block; }
+    .btn-sel-toggle { background:none; border:1.5px solid var(--border); border-radius:7px; padding:3px 8px; font-size:13px; cursor:pointer; color:var(--text2); line-height:1; }
+    .mg.select-mode .btn-sel-toggle { background:var(--bg2); border-color:var(--text3); }
+    .btn-del-sel { display:none; background:var(--red); color:white; border:none; border-radius:7px; padding:3px 9px; font-size:12px; font-weight:700; cursor:pointer; }
+    .mg.select-mode .btn-del-sel { display:inline-flex; align-items:center; gap:3px; }
     .entry-row {
       display:flex; justify-content:space-between; align-items:center;
       padding:9px 0; border-bottom:1px solid rgba(255,255,255,.06);
@@ -2346,13 +2353,17 @@ async function loadToday() {
         g.className = 'mg open';
         g.style.borderColor = style.border;
         g.innerHTML =
-          `<div class="mg-header" style="background:${style.bg}" onclick="this.parentElement.classList.toggle('open')">
+          `<div class="mg-header" style="background:${style.bg}" onclick="mgHeaderClick(event,this)">
             <div class="mg-header-left">
               <span class="mg-meal-icon">${icons[m] || '🍽️'}</span>
               <span class="mg-meal-name" style="color:${style.accent}">${m}</span>
               <span class="mg-meal-kcal" style="color:${style.accent}">${totalKcal} kcal</span>
             </div>
-            <span class="mg-chevron">▼</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <button class="btn-del-sel" onclick="deleteLiniesSeleccionades(event,this.closest('.mg'))">🗑 <span class="sel-count">0</span></button>
+              <button class="btn-sel-toggle" onclick="toggleSelectModeApat(event,this.closest('.mg'))" title="Seleccionar línies">☐</button>
+              <span class="mg-chevron">▼</span>
+            </div>
           </div>
           <div class="mg-body" style="border-top-color:${style.border}">` +
           groups[m].map(e =>
@@ -2425,6 +2436,7 @@ async function loadLiniesApat(apatId) {
     el.innerHTML = linies.map(l => {
       const lid = l.id.replace(/-/g, '');
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'
+      + '<input type="checkbox" class="linia-cb" data-id="' + l.id + '" onchange="updateSelCount(this.closest(\'.mg\'))">'
       + '<div style="flex:1;min-width:0">'
       +   '<div class="entry-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + l.nom + '</div>'
       +   '<div id="qty-sub-' + lid + '" style="font-size:11px;color:var(--text2);margin-top:2px">'
@@ -2518,6 +2530,48 @@ async function saveEditQty(liniaId, oldQty, oldKcal, oldProt, oldGreix, oldCarbs
   } catch(e) {
     toast('❌ ' + e.message, 'err');
     if (sub) sub.innerHTML = '<span style="color:var(--red)">Error</span>';
+  }
+}
+
+function mgHeaderClick(e, header) {
+  if (e.target.closest('button')) return;
+  header.parentElement.classList.toggle('open');
+}
+
+function toggleSelectModeApat(e, mg) {
+  e.stopPropagation();
+  mg.classList.toggle('select-mode');
+  if (!mg.classList.contains('select-mode')) {
+    mg.querySelectorAll('.linia-cb').forEach(cb => cb.checked = false);
+    updateSelCount(mg);
+  }
+}
+
+function updateSelCount(mg) {
+  if (!mg) return;
+  const count = mg.querySelectorAll('.linia-cb:checked').length;
+  const span = mg.querySelector('.sel-count');
+  if (span) span.textContent = count;
+}
+
+async function deleteLiniesSeleccionades(e, mg) {
+  e.stopPropagation();
+  const checked = [...mg.querySelectorAll('.linia-cb:checked')];
+  if (!checked.length) { toast('⚠️ Selecciona almenys una línia', 'err'); return; }
+  const n = checked.length;
+  if (!confirm(`Esborrar ${n} línia${n > 1 ? 'es' : ''}?`)) return;
+  try {
+    await Promise.all(checked.map(cb => nArchive(cb.dataset.id)));
+    toast(`🗑 ${n} línia${n > 1 ? 'es esborrades' : ' esborrada'}`, 'ok');
+    mg.classList.remove('select-mode');
+    mg.querySelectorAll('[id^="linies-"]').forEach(div => {
+      const flat = div.id.replace('linies-', '');
+      const apatId = flat.replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5');
+      loadLiniesApat(apatId);
+    });
+    loadToday();
+  } catch(err) {
+    toast('❌ ' + err.message, 'err');
   }
 }
 
@@ -3503,13 +3557,17 @@ async function loadCerca() {
         g.className = 'mg open';
         g.style.borderColor = style.border;
         g.innerHTML =
-          `<div class="mg-header" style="background:${style.bg}" onclick="this.parentElement.classList.toggle('open')">
+          `<div class="mg-header" style="background:${style.bg}" onclick="mgHeaderClick(event,this)">
             <div class="mg-header-left">
               <span class="mg-meal-icon">${icons[m] || '🍽️'}</span>
               <span class="mg-meal-name" style="color:${style.accent}">${m}</span>
               <span class="mg-meal-kcal" style="color:${style.accent}">${totalKcal} kcal</span>
             </div>
-            <span class="mg-chevron">▼</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <button class="btn-del-sel" onclick="deleteLiniesSeleccionades(event,this.closest('.mg'))">🗑 <span class="sel-count">0</span></button>
+              <button class="btn-sel-toggle" onclick="toggleSelectModeApat(event,this.closest('.mg'))" title="Seleccionar línies">☐</button>
+              <span class="mg-chevron">▼</span>
+            </div>
           </div>
           <div class="mg-body" style="border-top-color:${style.border}">` +
           groups[m].map(e => `
