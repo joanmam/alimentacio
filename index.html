@@ -383,6 +383,43 @@
     .wday-right { text-align:right; }
     .wday-kcal { font-size:13px; font-weight:700; }
     .wday-pct { font-size:11px; color:var(--text3); margin-top:1px; }
+
+    /* ── DESKTOP LAYOUT (≥700px) ── */
+    @media (min-width: 700px) {
+      body { max-width: 1000px; }
+
+      /* Nav horitzontal a dalt en comptes d'a baix */
+      .nav {
+        position: static;
+        transform: none;
+        border-top: none;
+        border-bottom: 1px solid var(--border);
+        order: -1;
+        justify-content: center;
+        gap: 4px;
+        padding: 6px 12px;
+      }
+      .nav-btn { flex-direction: row; gap: 5px; font-size: 12px; padding: 7px 14px; }
+      .nav-btn .nav-icon { font-size: 18px; }
+      body { display: flex; flex-direction: column; }
+      .header { order: -2; }
+
+      /* Avui: 2 columnes */
+      #page-today {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 16px;
+        align-items: start;
+        padding-bottom: 24px;
+      }
+      #card-today-ring   { grid-column: 1; grid-row: 1; }
+      #today-entries     { grid-column: 2; grid-row: 1 / 4; min-height: 200px; }
+      #card-today-macros   { grid-column: 1; grid-row: 2; }
+      #card-today-exercici { grid-column: 1; grid-row: 3; }
+
+      /* Pàgines generals: padding inferior normal (no cal compensar nav de baix) */
+      .page { padding-bottom: 24px; }
+    }
   </style>
 </head>
 <body>
@@ -539,7 +576,7 @@
 <div id="page-today" class="page">
 
   <!-- Kcal ring -->
-  <div class="card" style="text-align:center">
+  <div class="card" id="card-today-ring" style="text-align:center">
     <div class="hint" id="today-date-lbl" style="margin-bottom:14px;text-transform:uppercase;letter-spacing:2px"></div>
     <div class="ring-wrap">
       <svg width="160" height="160" viewBox="0 0 160 160">
@@ -603,7 +640,7 @@
   </div>
 
   <!-- Macros -->
-  <div class="card card-sh" style="border-color:rgba(124,58,237,.22)">
+  <div class="card card-sh" id="card-today-macros" style="border-color:rgba(124,58,237,.22)">
     <div class="sh" style="background:#f5f3ff;border-bottom:1.5px solid rgba(124,58,237,.2)">
       <span class="sh-icon">📊</span>
       <span class="sh-title" style="color:#4c1d95">Macronutrients</span>
@@ -641,7 +678,7 @@
   </div>
 
   <!-- Exercici -->
-  <div class="card card-sh" style="border-color:rgba(34,197,94,.25)">
+  <div class="card card-sh" id="card-today-exercici" style="border-color:rgba(34,197,94,.25)">
     <div class="sh" style="background:#dcfce7;border-bottom:1.5px solid rgba(34,197,94,.25)">
       <span class="sh-icon">🏃</span>
       <span class="sh-title" style="color:#14532d">Exercici d'avui</span>
