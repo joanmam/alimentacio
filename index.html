@@ -399,8 +399,8 @@
       /* Nav: ampliem perquè càpiguen tots els botons */
       .nav { max-width: 1000px; }
 
-      /* Avui: 2 columnes */
-      #page-today {
+      /* Avui: 2 columnes (només quan la pestanya és activa) */
+      #page-today.active {
         display: grid;
         grid-template-columns: 360px 1fr;
         gap: 16px;
@@ -420,7 +420,7 @@
   <div class="header-left">
     <span class="header-logo">🥗</span>
     <div>
-      <div class="header-title">Alimentació <span style="font-size:9px;opacity:0.5">v22</span></div>
+      <div class="header-title">Alimentació <span style="font-size:9px;opacity:0.5">v23</span></div>
       <div class="header-date" id="h-date"></div>
     </div>
   </div>
