@@ -42,6 +42,14 @@
       font-size:22px; cursor:pointer; padding:6px; border-radius:8px;
     }
     .icon-btn:active { background: var(--card); }
+    .header-right { display:flex; align-items:center; gap:4px; }
+    .icon-btn-cancel {
+      background:var(--red); border:none; color:#fff;
+      font-size:15px; cursor:pointer; padding:7px 9px; border-radius:8px;
+      line-height:1; display:none;
+    }
+    .icon-btn-cancel.show { display:inline-flex; }
+    .icon-btn-cancel:active { opacity:0.8; }
 
     /* ── BOTTOM NAV ── */
     .nav {
@@ -416,7 +424,10 @@
       <div class="header-date" id="h-date"></div>
     </div>
   </div>
-  <button class="icon-btn" onclick="openSettings()" title="Configuració">⚙️</button>
+  <div class="header-right">
+    <button class="icon-btn-cancel" id="btn-cancel-day" onclick="cancelarDia()" title="Cancel·lar registre d'avui">🚫</button>
+    <button class="icon-btn" onclick="openSettings()" title="Configuració">⚙️</button>
+  </div>
 </header>
 
 
@@ -1360,6 +1371,7 @@ let items = [];        // Claude-parsed items
 let scanner = null;
 let scanning = false;
 let _todayApatMap = {}; // apatId → { tipus, notionUrl } — populated by loadToday()
+let _avuiSenseDades = false; // true si avui s'ha marcat com "Sense dades" (dia cancel·lat)
 let _platPorcioFactor = 1; // factor de ració quan s'usa un plat (½, ⅓, etc.)
 
 // ── INIT ──────────────────────────────────────────────
@@ -1448,6 +1460,7 @@ function goPage(tab) {
   document.getElementById('nav-' + tab).classList.add('active');
   if (tab !== 'scan') stopScanner();
   else startScanner();
+  document.getElementById('btn-cancel-day').classList.toggle('show', tab === 'today');
 }
 
 // ── MEAL SELECTOR ─────────────────────────────────────
@@ -2257,6 +2270,14 @@ async function loadToday() {
       nQuery(DB_RESUM, { property: 'Data', date: { equals: dateStr } }),
       nGetPage(CONFIG_ID).catch(() => null),
     ]);
+
+    // Comprovar si avui s'ha marcat com "Sense dades" (dia cancel·lat)
+    const resumAvui = resumRes?.results?.[0];
+    _avuiSenseDades = !!resumAvui?.properties?.['Sense dades']?.checkbox;
+    const btnCancel = document.getElementById('btn-cancel-day');
+    btnCancel.textContent = _avuiSenseDades ? '↩️' : '🚫';
+    btnCancel.title = _avuiSenseDades ? 'Reactivar el registre d\'avui' : 'Cancel·lar registre d\'avui';
+
     let objKcal = 1658, objProt = 128, objGreix = 55, objCarbs = 162, objFibra = 25;
     // Llegir objectius des de Configuració (fórmules) — font fiable
     if (cfgPage?.properties) {
@@ -2356,6 +2377,11 @@ async function loadToday() {
     };
     const el = document.getElementById('today-entries');
 
+    if (_avuiSenseDades) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">🚫</div><div class="empty-txt">Dia marcat com "Sense dades" — no compta per les mitjanes</div></div>';
+      return;
+    }
+
     if (!Object.keys(groups).length) {
       el.innerHTML = '<div class="empty"><div class="empty-icon">🍽️</div><div class="empty-txt">Cap àpat registrat avui</div></div>';
       return;
@@ -2395,6 +2421,54 @@ async function loadToday() {
   } catch(e) {
     document.getElementById('today-entries').innerHTML =
       `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-txt">Error: ${e.message}</div></div>`;
+  }
+}
+
+// ── CANCEL·LAR DIA ────────────────────────────────────
+async function cancelarDia() {
+  if (!cfg.notionToken) { openSettings(); return; }
+  const dateStr = todayISO();
+
+  // Si el dia ja està marcat com "Sense dades" → oferir reactivar-lo
+  if (_avuiSenseDades) {
+    if (!confirm('Reactivar el registre d\'avui?\n\nEl dia tornarà a comptar per les mitjanes (les dades d\'àpats i exercicis ja esborrades no es recuperaran).')) return;
+    try {
+      const resumId = await ensureResum(dateStr);
+      await nPatch(resumId, { 'Sense dades': { checkbox: false } });
+      toast('✅ Dia reactivat', 'ok');
+      loadToday();
+    } catch(e) {
+      toast('❌ ' + e.message, 'err');
+    }
+    return;
+  }
+
+  if (!confirm('Cancel·lar el registre d\'avui?\n\nS\'esborraran TOTS els àpats i exercicis d\'avui i el dia no comptarà per les mitjanes ni les estadístiques setmanals.\n\nAquesta acció no es pot desfer.')) return;
+
+  try {
+    // 1. Esborrar tots els àpats d'avui (i les seves línies)
+    const apatsRes = await nQuery(DB_APATS, { property: 'Data', date: { equals: dateStr } });
+    for (const apat of (apatsRes.results || [])) {
+      const liniesRes = await nQueryFull(DB_LINIES, {
+        filter: { property: 'Àpat', relation: { contains: apat.id } }
+      });
+      await Promise.all((liniesRes.results || []).map(l => nArchive(l.id)));
+      await nArchive(apat.id);
+    }
+
+    // 2. Esborrar tots els exercicis d'avui
+    const exRes = await nQuery(DB_EXERCICIS, { property: 'Data', date: { equals: dateStr } });
+    await Promise.all((exRes.results || []).map(ex => nArchive(ex.id)));
+
+    // 3. Marcar Resum Diari d'avui com "Sense dades"
+    const resumId = await ensureResum(dateStr);
+    await nPatch(resumId, { 'Sense dades': { checkbox: true } });
+
+    toast('🚫 Dia cancel·lat', 'ok');
+    loadToday();
+    loadExercici(dateStr);
+  } catch(e) {
+    toast('❌ ' + e.message, 'err');
   }
 }
 
@@ -3707,6 +3781,7 @@ async function loadSetmana() {
       ]
     });
     const objByDate = {};
+    const cancelledByDate = {};
     let defaultObj = 1658;
     for (const row of (resumRes.results || [])) {
       const p = row.properties;
@@ -3715,15 +3790,17 @@ async function loadSetmana() {
       const obj = p['Kcal objectiu']?.formula?.number || p['Kcal']?.number || defaultObj;
       objByDate[dateVal] = obj;
       defaultObj = obj;
+      if (p['Sense dades']?.checkbox) cancelledByDate[dateVal] = true;
     }
 
     // Construeix array de dies amb totes les dades
     const dayData = days.map(d => ({
-      date:    d,
-      kcal:    kcalByDate[d] || 0,
-      exKcal:  exByDate[d]   || 0,
-      objKcal: objByDate[d]  || defaultObj,
-      hasData: !!kcalByDate[d],
+      date:      d,
+      kcal:      kcalByDate[d] || 0,
+      exKcal:    exByDate[d]   || 0,
+      objKcal:   objByDate[d]  || defaultObj,
+      hasData:   !!kcalByDate[d] && !cancelledByDate[d],
+      cancelled: !!cancelledByDate[d],
     }));
 
     const lastObj = dayData[dayData.length - 1].objKcal || defaultObj;
@@ -3733,7 +3810,7 @@ async function loadSetmana() {
     const withData = dayData.filter(d => d.hasData && d.kcal > 0);
     const avgKcal  = withData.length
       ? Math.round(withData.reduce((s, d) => s + d.kcal, 0) / withData.length) : 0;
-    const withEx   = dayData.filter(d => d.exKcal > 0);
+    const withEx   = dayData.filter(d => d.exKcal > 0 && !d.cancelled);
     const avgEx    = withEx.length
       ? Math.round(withEx.reduce((s, d) => s + d.exKcal, 0) / withEx.length) : 0;
     const daysOk   = withData.filter(d => {
@@ -3778,14 +3855,14 @@ async function loadSetmana() {
       const target = d.objKcal + d.exKcal;
       const pct    = d.kcal > 0 ? Math.round(d.kcal / maxKcal * 100) : 0;
       const isOver = d.kcal > target;
-      const color  = d.kcal > 0 ? (isOver ? 'var(--red)' : 'var(--green)') : 'rgba(0,0,0,.08)';
+      const color  = d.cancelled ? 'rgba(0,0,0,.06)' : d.kcal > 0 ? (isOver ? 'var(--red)' : 'var(--green)') : 'rgba(0,0,0,.08)';
 
       const wrap = document.createElement('div');
       wrap.className = 'wbar-wrap';
       wrap.innerHTML = `
-        <div class="wbar-kcal">${d.kcal > 0 ? Math.round(d.kcal) : ''}</div>
+        <div class="wbar-kcal">${d.cancelled ? '🚫' : d.kcal > 0 ? Math.round(d.kcal) : ''}</div>
         <div class="wbar-outer">
-          <div class="wbar${isOver ? ' over' : ''}" style="height:${pct}%;background:${color}"></div>
+          <div class="wbar${isOver ? ' over' : ''}" style="height:${d.cancelled ? 3 : pct}%;background:${color}"></div>
         </div>
         <div class="wbar-day">${dayNames[date.getDay()]}</div>
       `;
@@ -3813,14 +3890,14 @@ async function loadSetmana() {
       row.onclick = () => goToDay(d.date);
       row.innerHTML = `
         <div class="wday-left">
-          <div class="wday-dot" style="background:${netColor}"></div>
+          <div class="wday-dot" style="background:${d.cancelled ? 'transparent' : netColor}${d.cancelled ? ';display:flex;align-items:center;justify-content:center;width:auto;height:auto;font-size:11px' : ''}">${d.cancelled ? '🚫' : ''}</div>
           <div>
             <div class="wday-name">${dayLabel}</div>
             <div style="font-size:11px;color:var(--text3)">${dateLabel}</div>
           </div>
         </div>
         <div class="wday-right">
-          ${d.hasData ? `
+          ${d.cancelled ? `<div class="wday-pct">🚫 No hi dades</div>` : d.hasData ? `
             <div style="text-align:right">
               <div class="wday-kcal" style="color:${kcalColor}">${Math.round(d.kcal)} kcal</div>
               ${d.exKcal > 0 ? `<div style="font-size:11px;color:var(--green)">🏃 +${Math.round(d.exKcal)} ex</div>` : ''}
