@@ -1471,50 +1471,70 @@ function selMeal(btn, ctx) {
 }
 
 // ── SCANNER ───────────────────────────────────────────
+// Totes les crides start/stop passen per _scannerOp perquè s'executin en
+// sèrie: Html5Qrcode no admet un start() mentre un start()/stop() anterior
+// encara està en curs (era la causa de l'escàner que fallava o trigava molt).
+let _scannerOp = Promise.resolve();
+let _scannerBusy = false;
+
 function initScanner() {
   try {
     scanner = new Html5Qrcode('reader');
-    startScanner();
+    // NOTA: no cridem startScanner() aquí; qui mostri la pestanya 'scan'
+    // (goPage) ja l'engega. Cridar-lo dues vegades seguides feia que
+    // Html5Qrcode rebés dos start() simultanis i fallés intermitentment.
   } catch(e) {
     document.getElementById('scan-status').textContent = '⚠️ Error iniciant escàner: ' + e;
   }
 }
 
 function startScanner() {
-  if (scanning || !scanner) return;
-  // Amplada gran i horitzontal per codis EAN-13; FPS alt per no perdre frames
-  const boxW = Math.min(Math.round((window.innerWidth || 360) * 0.85), 340);
-  const boxH = Math.round(boxW * 0.38); // ratio horitzontal per barres lineals
-  scanner.start(
-    { facingMode: 'environment' },
-    {
-      fps: 25,
-      qrbox: { width: boxW, height: boxH },
-      formatsToSupport: [
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.EAN_8,
-        Html5QrcodeSupportedFormats.CODE_128,
-        Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.UPC_E,
-        Html5QrcodeSupportedFormats.CODE_39,
-        Html5QrcodeSupportedFormats.ITF,
-        Html5QrcodeSupportedFormats.QR_CODE,
-      ],
-      aspectRatio: 1.5,
-      disableFlip: false,
-    },
-    onBarcode,
-    () => {}
-  ).then(() => scanning = true)
-   .catch(e => {
-     document.getElementById('scan-status').textContent =
-       '⚠️ Càmera no disponible. ' + (e.message || e);
-   });
+  if (!scanner) return;
+  _scannerOp = _scannerOp.then(() => {
+    if (scanning || _scannerBusy) return;
+    _scannerBusy = true;
+    // Amplada gran i horitzontal per codis EAN-13
+    const boxW = Math.min(Math.round((window.innerWidth || 360) * 0.85), 340);
+    const boxH = Math.round(boxW * 0.38); // ratio horitzontal per barres lineals
+    return scanner.start(
+      { facingMode: 'environment' },
+      {
+        fps: 15,
+        qrbox: { width: boxW, height: boxH },
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.ITF,
+          Html5QrcodeSupportedFormats.QR_CODE,
+        ],
+        aspectRatio: 1.5,
+        disableFlip: false,
+      },
+      onBarcode,
+      () => {}
+    ).then(() => { scanning = true; })
+     .catch(e => {
+       document.getElementById('scan-status').textContent =
+         '⚠️ Càmera no disponible. ' + (e.message || e);
+     })
+     .finally(() => { _scannerBusy = false; });
+  }).catch(() => { _scannerBusy = false; });
 }
 
 function stopScanner() {
-  if (!scanning || !scanner) return;
-  scanner.stop().then(() => scanning = false).catch(() => {});
+  if (!scanner) return;
+  _scannerOp = _scannerOp.then(() => {
+    if (!scanning || _scannerBusy) return;
+    _scannerBusy = true;
+    return scanner.stop()
+      .then(() => { scanning = false; })
+      .catch(() => {})
+      .finally(() => { _scannerBusy = false; });
+  }).catch(() => { _scannerBusy = false; });
 }
 
 let _lastBarcode = '';
