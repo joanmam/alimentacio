@@ -1248,13 +1248,46 @@
     </div>
 
     <div class="divider"></div>
-    <div class="hint" style="margin-bottom:14px;line-height:1.8">
-      <b style="color:var(--text2)">IDs de Notion (preconfigurat):</b><br>
-      Àpats: <code style="color:var(--accent)">b512738f…</code><br>
-      Línies: <code style="color:var(--accent)">8d4c5295…</code><br>
-      Aliments: <code style="color:var(--accent)">c36bb073…</code><br>
-      Resum Diari: <code style="color:var(--accent)">bb10a781…</code>
-    </div>
+    <details id="s-dbids-details">
+      <summary class="modal-title" style="font-size:15px;cursor:pointer;list-style:none">🗄️ Les meves bases de dades de Notion</summary>
+      <div class="hint" style="margin:8px 0 14px">Cada persona té el seu propi espai de Notion. Duplica la plantilla al teu compte i enganxa aquí els 9 IDs (o URLs) de les teves pròpies bases — substitueixen els valors per defecte.</div>
+      <div class="form-group">
+        <label class="lbl">Àpats</label>
+        <input type="text" id="s-db-apats" placeholder="ID base Àpats">
+      </div>
+      <div class="form-group">
+        <label class="lbl">Línies d'àpat</label>
+        <input type="text" id="s-db-linies" placeholder="ID base Línies d'àpat">
+      </div>
+      <div class="form-group">
+        <label class="lbl">Aliments</label>
+        <input type="text" id="s-db-aliments" placeholder="ID base Aliments">
+      </div>
+      <div class="form-group">
+        <label class="lbl">Resum Diari</label>
+        <input type="text" id="s-db-resum" placeholder="ID base Resum Diari">
+      </div>
+      <div class="form-group">
+        <label class="lbl">Pes</label>
+        <input type="text" id="s-db-pes" placeholder="ID base Pes">
+      </div>
+      <div class="form-group">
+        <label class="lbl">Exercicis</label>
+        <input type="text" id="s-db-exercicis" placeholder="ID base Exercicis">
+      </div>
+      <div class="form-group">
+        <label class="lbl">Plats</label>
+        <input type="text" id="s-db-plats" placeholder="ID base Plats">
+      </div>
+      <div class="form-group">
+        <label class="lbl">Fotos Plats</label>
+        <input type="text" id="s-db-fotos" placeholder="ID base Fotos Plats">
+      </div>
+      <div class="form-group">
+        <label class="lbl">Configuració (ID de la teva fila personal)</label>
+        <input type="text" id="s-db-config" placeholder="ID de la pàgina Configuració">
+      </div>
+    </details>
 
     <button class="btn btn-primary" onclick="saveSettings()">💾 Desar</button>
     <button class="btn btn-ghost" style="margin-top:8px" onclick="testConnexio()">🔌 Verificar connexió Notion</button>
@@ -1347,16 +1380,33 @@
      JAVASCRIPT
 ══════════════════════════════════════════════════════════ -->
 <script>
-// ── NOTION DB IDs ─────────────────────────────────────
-const DB_APATS    = 'be4fd159-cdbf-4636-b6e7-41246529fd91';
-const DB_LINIES   = '581de9fb-137c-4a87-b3aa-34fe42dce956';
-const DB_ALIMENTS = 'b93d7d75-bcdf-4e10-bc98-2c108e2afdee';
-const DB_RESUM    = '76abddd1-e686-45f6-9fae-ec13f487a7d3';
-const DB_PES        = 'd5e98d6e-6e1d-415d-9c32-bd3ee1a94170';
-const DB_EXERCICIS  = '58bdc05e-5352-4ca6-8c66-f1ed162572f7';
-const DB_PLATS      = '8996e9fc-00f5-47f8-9a80-7a687e20a67d';
-const DB_FOTOS_PLATS = 'c41d2985-e54c-409f-ba29-4e8cab67ca64';
-const CONFIG_ID   = '3463d60a-7969-8106-afee-ec3e472095e3'; // Configuració row ID
+// ── NOTION DB IDs (configurables per usuari — Configuració ▸ Bases de dades) ──
+// Els valors per defecte són els de l'espai de la Joan; cada usuari nou els
+// substitueix pels IDs del seu propi espai de Notion des de la pantalla de Configuració.
+const DEFAULT_DB_IDS = {
+  apats:      'be4fd159-cdbf-4636-b6e7-41246529fd91',
+  linies:     '581de9fb-137c-4a87-b3aa-34fe42dce956',
+  aliments:   'b93d7d75-bcdf-4e10-bc98-2c108e2afdee',
+  resum:      '76abddd1-e686-45f6-9fae-ec13f487a7d3',
+  pes:        'd5e98d6e-6e1d-415d-9c32-bd3ee1a94170',
+  exercicis:  '58bdc05e-5352-4ca6-8c66-f1ed162572f7',
+  plats:      '8996e9fc-00f5-47f8-9a80-7a687e20a67d',
+  fotosPlats: 'c41d2985-e54c-409f-ba29-4e8cab67ca64',
+  config:     '3463d60a-7969-8106-afee-ec3e472095e3', // Configuració row ID
+};
+let DB_APATS, DB_LINIES, DB_ALIMENTS, DB_RESUM, DB_PES, DB_EXERCICIS, DB_PLATS, DB_FOTOS_PLATS, CONFIG_ID;
+function loadDbIds() {
+  DB_APATS       = ls('db_apats')      || DEFAULT_DB_IDS.apats;
+  DB_LINIES      = ls('db_linies')     || DEFAULT_DB_IDS.linies;
+  DB_ALIMENTS    = ls('db_aliments')   || DEFAULT_DB_IDS.aliments;
+  DB_RESUM       = ls('db_resum')      || DEFAULT_DB_IDS.resum;
+  DB_PES         = ls('db_pes')        || DEFAULT_DB_IDS.pes;
+  DB_EXERCICIS   = ls('db_exercicis')  || DEFAULT_DB_IDS.exercicis;
+  DB_PLATS       = ls('db_plats')      || DEFAULT_DB_IDS.plats;
+  DB_FOTOS_PLATS = ls('db_fotos')      || DEFAULT_DB_IDS.fotosPlats;
+  CONFIG_ID      = ls('db_config')     || DEFAULT_DB_IDS.config;
+}
+loadDbIds();
 
 // ── STATE ─────────────────────────────────────────────
 let cfg = {
@@ -1429,6 +1479,16 @@ function checkRecipeImport() {
 
 function ls(k) { return localStorage.getItem(k) || ''; }
 function lsSet(k, v) { localStorage.setItem(k, v); }
+
+// Accepta un ID cru o una URL de Notion i en treu el UUID (amb guions)
+function extractNotionId(v) {
+  v = (v || '').trim();
+  if (!v) return '';
+  const m = v.match(/([0-9a-fA-F]{32}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/);
+  if (!m) return v;
+  const hex = m[1].replace(/-/g, '');
+  return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+}
 
 // ── TOAST ─────────────────────────────────────────────
 let _toastTimer = null;
@@ -3942,6 +4002,15 @@ function openSettings() {
   document.getElementById('s-proxy').value  = cfg.proxyUrl;
   document.getElementById('s-imgbb').value  = cfg.imgbbKey;
   document.getElementById('s-default-tab').value = ls('defaultTab') || 'today';
+  document.getElementById('s-db-apats').value     = DB_APATS;
+  document.getElementById('s-db-linies').value    = DB_LINIES;
+  document.getElementById('s-db-aliments').value  = DB_ALIMENTS;
+  document.getElementById('s-db-resum').value     = DB_RESUM;
+  document.getElementById('s-db-pes').value       = DB_PES;
+  document.getElementById('s-db-exercicis').value = DB_EXERCICIS;
+  document.getElementById('s-db-plats').value     = DB_PLATS;
+  document.getElementById('s-db-fotos').value     = DB_FOTOS_PLATS;
+  document.getElementById('s-db-config').value    = CONFIG_ID;
   // Carregar valors actuals de Notion si tenim token
   document.getElementById('s-pes-obj').value   = '';
   document.getElementById('s-velocitat').value = '';
@@ -3968,6 +4037,17 @@ async function saveSettings() {
   lsSet('proxyUrl',    cfg.proxyUrl);
   lsSet('imgbbKey',    cfg.imgbbKey);
   lsSet('defaultTab',  document.getElementById('s-default-tab').value);
+
+  lsSet('db_apats',     extractNotionId(document.getElementById('s-db-apats').value));
+  lsSet('db_linies',    extractNotionId(document.getElementById('s-db-linies').value));
+  lsSet('db_aliments',  extractNotionId(document.getElementById('s-db-aliments').value));
+  lsSet('db_resum',     extractNotionId(document.getElementById('s-db-resum').value));
+  lsSet('db_pes',       extractNotionId(document.getElementById('s-db-pes').value));
+  lsSet('db_exercicis', extractNotionId(document.getElementById('s-db-exercicis').value));
+  lsSet('db_plats',     extractNotionId(document.getElementById('s-db-plats').value));
+  lsSet('db_fotos',     extractNotionId(document.getElementById('s-db-fotos').value));
+  lsSet('db_config',    extractNotionId(document.getElementById('s-db-config').value));
+  loadDbIds();
 
   // Actualitzar objectius a Notion si hi ha valors i token
   const pesObj   = parseFloat(document.getElementById('s-pes-obj').value);
