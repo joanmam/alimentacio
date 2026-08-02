@@ -36,9 +36,9 @@
     .header-left { display:flex; align-items:center; gap:10px; }
     .header-logo { font-size:26px; }
     .header-title { font-size:17px; font-weight:700; }
-    .header-date { font-size:11px; color:var(--text3); margin-top:1px; }
+    .header-date { font-size:11px; color:var(--text); margin-top:1px; }
     .icon-btn {
-      background:none; border:none; color:var(--text2);
+      background:none; border:none; color:var(--text);
       font-size:22px; cursor:pointer; padding:6px; border-radius:8px;
     }
     .icon-btn:active { background: var(--card); }
@@ -82,7 +82,7 @@
       border-radius:16px; padding:18px; margin-bottom:12px;
     }
     .card-title {
-      font-size:11px; color:var(--text3); text-transform:uppercase;
+      font-size:11px; color:var(--text); text-transform:uppercase;
       letter-spacing:1.5px; margin-bottom:14px;
     }
 
@@ -96,11 +96,11 @@
     .btn:active { opacity:.75; }
     .btn-primary { background:var(--accent); color:#fff; }
     .btn-secondary { background:rgba(249,115,22,.15); border:1px solid rgba(249,115,22,.3); color:var(--accent); }
-    .btn-ghost { background:var(--card); border:1px solid var(--border); color:var(--text2); }
+    .btn-ghost { background:var(--card); border:1px solid var(--border); color:var(--text); }
     .btn-sm { padding:8px 14px; font-size:13px; border-radius:9px; width:auto; }
 
     /* ── FORM ── */
-    label.lbl { display:block; font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:7px; }
+    label.lbl { display:block; font-size:11px; color:var(--text); text-transform:uppercase; letter-spacing:1px; margin-bottom:7px; }
     input, textarea, select {
       width:100%; background:var(--card); border:1px solid var(--border);
       border-radius:10px; color:var(--text); font-size:15px;
@@ -113,13 +113,13 @@
     input[type="number"] { -moz-appearance:textfield; }
     input[type="number"]::-webkit-inner-spin-button { -webkit-appearance:none; }
     .form-group { margin-bottom:14px; }
-    .hint { font-size:12px; color:var(--text3); margin-top:5px; line-height:1.5; }
+    .hint { font-size:12px; color:var(--text); margin-top:5px; line-height:1.5; }
 
     /* ── MEAL SELECTOR ── */
     .meal-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px; }
     .meal-chip {
       padding:10px 4px; border-radius:10px; border:1px solid var(--border);
-      background:var(--card); color:var(--text3); font-size:10px; font-weight:600;
+      background:var(--card); color:var(--text); font-size:10px; font-weight:600;
       text-align:center; cursor:pointer; transition:all .15s; font-family:inherit;
     }
     .meal-chip .mi { font-size:20px; display:block; margin-bottom:3px; }
@@ -153,11 +153,11 @@
 
     /* ── PRODUCT RESULT ── */
     .product-name { font-size:17px; font-weight:700; margin-bottom:3px; line-height:1.3; }
-    .product-brand { font-size:12px; color:var(--text3); margin-bottom:14px; }
+    .product-brand { font-size:12px; color:var(--text); margin-bottom:14px; }
     .macros-grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:12px; }
     .m4cell { background:rgba(255,255,255,.04); border-radius:10px; padding:10px 4px; text-align:center; }
     .m4cell-val { font-size:16px; font-weight:700; }
-    .m4cell-lbl { font-size:10px; color:var(--text3); margin-top:2px; }
+    .m4cell-lbl { font-size:10px; color:var(--text); margin-top:2px; }
 
     /* ── QTY ROW ── */
     .qty-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
@@ -168,17 +168,17 @@
       display:flex; align-items:center; justify-content:center; flex-shrink:0;
       font-family:inherit;
     }
-    .qty-unit { font-size:13px; color:var(--text3); flex-shrink:0; }
-    .qty-total { text-align:center; font-size:13px; color:var(--text2); margin-bottom:14px; }
+    .qty-unit { font-size:13px; color:var(--text); flex-shrink:0; }
+    .qty-total { text-align:center; font-size:13px; color:var(--text); margin-bottom:14px; }
 
     /* ── MACROS BARS ── */
     .mbar { display:flex; flex-direction:column; gap:5px; margin-bottom:13px; }
     .mbar-header { display:flex; justify-content:space-between; align-items:center; }
-    .mbar-name { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text2); }
+    .mbar-name { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text); }
     .mdot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
     .mbar-val { font-size:13px; color:var(--text); }
     .mbar-val b { font-size:17px; font-weight:700; }
-    .mbar-val .obj { color:var(--text3); font-size:11px; }
+    .mbar-val .obj { color:var(--text); font-size:11px; }
     .bar-bg { height:5px; background:rgba(255,255,255,.07); border-radius:3px; overflow:hidden; }
     .bar-fill { height:100%; border-radius:3px; transition:width .9s ease; }
 
@@ -189,10 +189,10 @@
     .r-prog { fill:none; stroke:var(--accent); stroke-width:10; stroke-linecap:round; stroke-dasharray:408; transition:stroke-dashoffset .9s ease; }
     .ring-center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; width:110px; }
     .ring-num { font-size:34px; font-weight:800; line-height:1; }
-    .ring-lbl { font-size:10px; color:var(--text3); margin-top:2px; letter-spacing:1px; }
-    .ring-net { font-size:11px; color:var(--text2); margin-top:5px; font-weight:600; }
+    .ring-lbl { font-size:10px; color:var(--text); margin-top:2px; letter-spacing:1px; }
+    .ring-net { font-size:11px; color:var(--text); margin-top:5px; font-weight:600; }
     .restant-num { font-size:24px; font-weight:800; line-height:1; margin-top:10px; }
-    .restant-lbl { font-size:10px; color:var(--text3); letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
+    .restant-lbl { font-size:10px; color:var(--text); letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
 
     /* ── INTERPRETED ITEMS ── */
     .item-row {
@@ -203,7 +203,7 @@
     .item-check { font-size:16px; margin-right:10px; }
     .item-info { flex:1; }
     .item-name { font-size:14px; font-weight:600; }
-    .item-macros { font-size:11px; color:var(--text3); margin-top:2px; }
+    .item-macros { font-size:11px; color:var(--text); margin-top:2px; }
     .item-del { color:var(--red); font-size:18px; cursor:pointer; padding:4px 6px; }
 
     /* ── SECTION CARD HEADERS ── */
@@ -234,12 +234,12 @@
     .mg-meal-icon { font-size: 20px; line-height: 1; }
     .mg-meal-name { font-size: 16px; font-weight: 800; }
     .mg-meal-kcal { font-size: 13px; font-weight: 600; opacity: 0.8; margin-left: 2px; }
-    .mg-chevron { font-size: 11px; color: var(--text3); transition: transform .25s; }
+    .mg-chevron { font-size: 11px; color: var(--text); transition: transform .25s; }
     .mg.open > .mg-header .mg-chevron { transform: rotate(180deg); }
     .mg-body { display: none; border-top: 1.5px solid var(--border); padding: 4px 14px 10px; }
     .mg.open > .mg-body { display: block; }
     /* Select mode */
-    .btn-sel-toggle { background:none; border:1.5px solid var(--border); border-radius:7px; padding:3px 8px; font-size:13px; cursor:pointer; color:var(--text2); line-height:1; }
+    .btn-sel-toggle { background:none; border:1.5px solid var(--border); border-radius:7px; padding:3px 8px; font-size:13px; cursor:pointer; color:var(--text); line-height:1; }
     .mg.select-mode .btn-sel-toggle { background:var(--bg2); border-color:var(--text3); }
     .btn-del-sel { background:var(--red); color:white; border:none; border-radius:7px; padding:3px 9px; font-size:12px; font-weight:700; cursor:pointer; display:none; }
     .mg.select-mode .btn-del-sel { display:inline-flex; align-items:center; gap:3px; }
@@ -249,11 +249,11 @@
     }
     .entry-row:last-child { border-bottom:none; }
     .entry-name { font-size:14px; font-weight:700; color:var(--text); }
-    .entry-sub { font-size:11px; color:var(--text3); margin-top:1px; }
+    .entry-sub { font-size:11px; color:var(--text); margin-top:1px; }
     .entry-kcal { font-size:13px; font-weight:600; color:var(--accent); }
 
     /* ── EMPTY STATE ── */
-    .empty { text-align:center; padding:40px 20px; color:var(--text3); }
+    .empty { text-align:center; padding:40px 20px; color:var(--text); }
     .empty-icon { font-size:44px; margin-bottom:10px; }
     .empty-txt { font-size:14px; }
 
@@ -276,10 +276,10 @@
     .macro-row { display:flex; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); gap:10px; }
     .macro-row:last-child { border-bottom:none; }
     .macro-row-name { flex:1; font-size:14px; font-weight:500; }
-    .macro-row-meal { font-size:11px; color:var(--text3); margin-top:2px; }
+    .macro-row-meal { font-size:11px; color:var(--text); margin-top:2px; }
     .macro-row-val { font-size:15px; font-weight:700; min-width:48px; text-align:right; }
-    .macro-row-kcal { font-size:11px; color:var(--text3); min-width:52px; text-align:right; }
-    .macro-row-link { font-size:18px; padding:0 2px; color:var(--text3); text-decoration:none; flex-shrink:0; }
+    .macro-row-kcal { font-size:11px; color:var(--text); min-width:52px; text-align:right; }
+    .macro-row-link { font-size:18px; padding:0 2px; color:var(--text); text-decoration:none; flex-shrink:0; }
     .macro-row-link:hover { color:var(--accent); }
     .porcio-chip { padding:7px 16px; border-radius:20px; border:2px solid var(--border); background:var(--bg2); font-size:15px; font-weight:700; cursor:pointer; transition:all .15s; }
     .porcio-chip.porcio-active { border-color:var(--accent); color:var(--accent); background:var(--bg); }
@@ -312,7 +312,7 @@
       padding:5px 16px; font-size:13px; color:var(--text); font-weight:700;
     }
     .consumed-info {
-      font-size:12px; color:var(--text2); margin-top:6px;
+      font-size:12px; color:var(--text); margin-top:6px;
     }
 
     a { color:var(--accent); }
@@ -320,7 +320,7 @@
     .section-gap { height:16px; }
 
     /* ── PLATS ── */
-    .plat-tab { padding:7px 14px; border-radius:20px; border:2px solid var(--border); background:var(--bg2); font-size:13px; font-weight:600; cursor:pointer; color:var(--text2); transition:all .15s; }
+    .plat-tab { padding:7px 14px; border-radius:20px; border:2px solid var(--border); background:var(--bg2); font-size:13px; font-weight:600; cursor:pointer; color:var(--text); transition:all .15s; }
     .plat-tab.active { border-color:var(--accent); color:var(--accent); background:var(--bg); }
     .plat-card {
       background:var(--card); border:1px solid var(--border); border-radius:14px;
@@ -330,7 +330,7 @@
     .plat-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
     .plat-nom { font-size:15px; font-weight:700; }
     .plat-apat { font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; white-space:nowrap; }
-    .plat-ing { font-size:12px; color:var(--text3); margin-top:6px; line-height:1.5;
+    .plat-ing { font-size:12px; color:var(--text); margin-top:6px; line-height:1.5;
       display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
     .plat-actions { display:flex; gap:8px; margin-top:10px; }
     .plat-form { background:var(--card); border:1px solid var(--accent); border-radius:14px; padding:16px; margin-bottom:12px; }
@@ -339,7 +339,7 @@
     .ex-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
     .ex-chip {
       padding:7px 12px; border-radius:20px; border:1px solid var(--border);
-      background:var(--card); color:var(--text2); font-size:12px; font-weight:600;
+      background:var(--card); color:var(--text); font-size:12px; font-weight:600;
       cursor:pointer; font-family:inherit; transition:all .15s;
     }
     .ex-chip.active { border-color:var(--accent); color:var(--accent); background:rgba(194,68,15,.1); }
@@ -373,11 +373,11 @@
     .wbar { width:100%; border-radius:5px 5px 0 0; min-height:3px; transition:height .6s ease; position:relative; }
     .wbar.today-bar { box-shadow:0 0 8px rgba(249,115,22,.5); }
     .wbar.over { background:var(--red) !important; }
-    .wbar-day { font-size:10px; color:var(--text3); }
-    .wbar-kcal { font-size:10px; color:var(--text2); font-weight:600; }
+    .wbar-day { font-size:10px; color:var(--text); }
+    .wbar-kcal { font-size:10px; color:var(--text); font-weight:600; }
     .week-obj-line { display:flex; justify-content:flex-end; align-items:center; gap:5px; margin-bottom:14px; }
     .week-obj-dot { width:10px; height:3px; background:rgba(255,255,255,.3); border-radius:2px; }
-    .week-obj-txt { font-size:11px; color:var(--text3); }
+    .week-obj-txt { font-size:11px; color:var(--text); }
     .week-day-list { margin-top:4px; }
     .wday-row {
       display:flex; justify-content:space-between; align-items:center;
@@ -390,7 +390,7 @@
     .wday-name.today-label { color:var(--accent); font-weight:700; }
     .wday-right { text-align:right; }
     .wday-kcal { font-size:13px; font-weight:700; }
-    .wday-pct { font-size:11px; color:var(--text3); margin-top:1px; }
+    .wday-pct { font-size:11px; color:var(--text); margin-top:1px; }
 
     /* ── DESKTOP LAYOUT (≥700px) ── */
     @media (min-width: 700px) {
@@ -450,7 +450,7 @@
     Apunta la càmera al codi de barres del producte
   </p>
   <div style="text-align:center;margin-bottom:12px">
-    <button id="btn-torch" onclick="toggleTorch()" style="background:none;border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:13px;color:var(--text2);cursor:pointer">🔦 Llanterna</button>
+    <button id="btn-torch" onclick="toggleTorch()" style="background:none;border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:13px;color:var(--text);cursor:pointer">🔦 Llanterna</button>
   </div>
 
   <!-- Product found -->
@@ -590,12 +590,12 @@
       </div>
     </div>
     <!-- Llegenda -->
-    <div style="display:flex;justify-content:center;gap:16px;margin-bottom:12px;font-size:11px;color:var(--text2)">
+    <div style="display:flex;justify-content:center;gap:16px;margin-bottom:12px;font-size:11px;color:var(--text)">
       <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);margin-right:4px;vertical-align:middle"></span>Consumit</span>
       <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green);margin-right:4px;vertical-align:middle"></span>Exercici</span>
       <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#c9b99a;margin-right:4px;vertical-align:middle;opacity:.6"></span>Objectiu</span>
     </div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:10px">
+    <div style="font-size:12px;color:var(--text);margin-bottom:10px">
       Suma objectiu: <span id="t-kcal-obj" style="color:var(--accent);font-weight:600">—</span>
       <span id="t-kcal-obj-ex" style="color:var(--green);font-weight:600"></span>
     </div>
@@ -608,22 +608,22 @@
     <div style="display:flex;justify-content:center;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
       <div style="text-align:center">
         <div style="font-size:20px;font-weight:800;line-height:1" id="t-pes-real">—</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">⚖️ Pes real</div>
+        <div style="font-size:10px;color:var(--text);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">⚖️ Pes real</div>
       </div>
       <div style="width:1px;background:var(--border)"></div>
       <div style="text-align:center">
         <div style="font-size:20px;font-weight:800;line-height:1;color:var(--green)" id="t-pes-obj">—</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">🎯 Objectiu</div>
+        <div style="font-size:10px;color:var(--text);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">🎯 Objectiu</div>
       </div>
       <div style="width:1px;background:var(--border)"></div>
       <div style="text-align:center">
         <div style="font-size:20px;font-weight:800;line-height:1;color:var(--accent)" id="t-pes-diff">—</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">📉 Per perdre</div>
+        <div style="font-size:10px;color:var(--text);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">📉 Per perdre</div>
       </div>
       <div style="width:1px;background:var(--border)"></div>
       <div style="text-align:center">
         <div style="font-size:20px;font-weight:800;line-height:1;color:var(--blue)" id="t-pes-vel">—</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">🐢 Velocitat</div>
+        <div style="font-size:10px;color:var(--text);margin-top:3px;text-transform:uppercase;letter-spacing:.8px">🐢 Velocitat</div>
       </div>
     </div>
   </div>
@@ -696,7 +696,7 @@
           <div id="ex-km-wrap" style="flex:1">
             <input type="number" id="ex-km" placeholder="km" min="0.1" step="0.1" oninput="calcExKcal()">
           </div>
-          <div style="color:var(--text3);font-size:18px;font-weight:300">=</div>
+          <div style="color:var(--text);font-size:18px;font-weight:300">=</div>
           <div style="flex:1">
             <input type="number" id="ex-kcal-in" placeholder="kcal" min="1">
           </div>
@@ -706,32 +706,32 @@
 
       <!-- Input passos (només visible quan selecciones Passos) -->
       <div id="ex-input-passos" style="display:none">
-        <div style="font-size:12px;color:var(--text3);margin-bottom:8px">
+        <div style="font-size:12px;color:var(--text);margin-bottom:8px">
           Només comptem els passos per sobre de 5.000 (activitat de fons ja inclosa a l'objectiu base)
         </div>
         <div class="ex-input-row">
           <div style="flex:2">
             <input type="number" id="ex-passos" placeholder="Total passos avui" min="1" step="100" oninput="calcPassos()">
           </div>
-          <div style="color:var(--text3);font-size:18px;font-weight:300">=</div>
+          <div style="color:var(--text);font-size:18px;font-weight:300">=</div>
           <div style="flex:1">
             <input type="number" id="ex-passos-kcal" placeholder="kcal" min="1" readonly style="background:var(--bg2)">
           </div>
           <button class="btn btn-primary" style="width:auto;padding:11px 16px" onclick="addPassos()">＋</button>
         </div>
-        <div id="ex-passos-detail" style="font-size:11px;color:var(--text3);margin-top:4px;min-height:16px"></div>
+        <div id="ex-passos-detail" style="font-size:11px;color:var(--text);margin-top:4px;min-height:16px"></div>
       </div>
 
       <div id="ex-list"></div>
 
       <div class="ex-total" id="ex-total" style="display:none">
-        <span style="color:var(--text2)">Total cremat</span>
+        <span style="color:var(--text)">Total cremat</span>
         <span style="color:var(--accent)" id="ex-total-val">0 kcal</span>
       </div>
       <div class="ex-obj-banner" id="ex-obj-banner" style="display:none">
         <span>🎯 Nou objectiu:</span>
         <span style="font-weight:800;color:var(--accent)" id="ex-obj-nou">—</span>
-        <span style="color:var(--text3);font-size:11px" id="ex-obj-detail"></span>
+        <span style="color:var(--text);font-size:11px" id="ex-obj-detail"></span>
       </div>
     </div>
   </div>
@@ -830,12 +830,12 @@
         <div class="ring-net" id="c-net-kcal"></div>
       </div>
     </div>
-    <div style="display:flex;justify-content:center;gap:16px;margin-bottom:12px;font-size:11px;color:var(--text2)">
+    <div style="display:flex;justify-content:center;gap:16px;margin-bottom:12px;font-size:11px;color:var(--text)">
       <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);margin-right:4px;vertical-align:middle"></span>Consumit</span>
       <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green);margin-right:4px;vertical-align:middle"></span>Exercici</span>
       <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#c9b99a;margin-right:4px;vertical-align:middle;opacity:.6"></span>Objectiu</span>
     </div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:10px">
+    <div style="font-size:12px;color:var(--text);margin-bottom:10px">
       Suma objectiu: <span id="c-kcal-obj" style="color:var(--accent);font-weight:600">—</span>
       <span id="c-kcal-obj-ex" style="color:var(--green);font-weight:600"></span>
     </div>
@@ -963,7 +963,7 @@
     <div id="pes-chart-svg" style="width:100%;height:140px;position:relative">
       <div class="empty" style="padding:10px 0"><div class="empty-txt">Carregant…</div></div>
     </div>
-    <div id="pes-chart-legend" style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--text3)">
+    <div id="pes-chart-legend" style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--text)">
       <span id="pes-min-lbl"></span><span id="pes-max-lbl"></span>
     </div>
   </div>
@@ -1004,7 +1004,7 @@
       <div class="card-title" style="margin:0">🔧 Neteja del catàleg</div>
       <button class="btn btn-ghost" style="width:auto;padding:6px 12px;font-size:12px" onclick="goPage('scan')">← Tornar</button>
     </div>
-    <p style="font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:12px">
+    <p style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:12px">
       Detecta Aliments amb noms similars o duplicats. Tria quin vols conservar i el sistema re-vincularà totes les línies d'àpat i arxivarà l'entrada obsoleta.
     </p>
     <button class="btn btn-primary" onclick="loadAdminDuplicats()">🔍 Analitzar catàleg</button>
@@ -1014,7 +1014,7 @@
   <!-- Secció 2: Recalcula línies -->
   <div class="card" style="margin-top:4px">
     <div class="card-title">🔄 Recalcula línies d'àpat</div>
-    <p style="font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:12px">
+    <p style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:12px">
       Si has corregit les dades nutricionals d'un Aliment al catàleg, recalcula les línies existents que hi fan referència.
     </p>
     <div class="form-group">
@@ -1024,7 +1024,7 @@
     <div id="adm-aliment-resultats" style="margin-bottom:8px"></div>
     <div id="adm-recalc-preview" style="display:none">
       <div class="divider"></div>
-      <div id="adm-recalc-info" style="font-size:13px;color:var(--text2);margin-bottom:10px"></div>
+      <div id="adm-recalc-info" style="font-size:13px;color:var(--text);margin-bottom:10px"></div>
       <button class="btn btn-primary" onclick="confirmaRecalcul()">⚡ Recalcula les línies</button>
     </div>
   </div>
@@ -1038,7 +1038,7 @@
 <div id="page-foto" class="page">
   <div class="card">
     <div class="card-title" style="margin-bottom:10px">📸 Anàlisi de plat per foto</div>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5">
+    <p style="font-size:13px;color:var(--text);margin-bottom:14px;line-height:1.5">
       Fes la foto amb el <b>dit índex visible</b> al costat del plat (≈7 cm de referència de mida).
     </p>
     <label for="foto-input" style="display:flex;align-items:center;justify-content:center;gap:8px;
@@ -1286,7 +1286,7 @@
     <button class="btn btn-ghost" style="margin-top:8px" onclick="testConnexio()">🔌 Verificar connexió Notion</button>
     <button class="btn btn-ghost" style="margin-top:8px" onclick="closeSettings()">Tancar</button>
     <div class="divider"></div>
-    <button class="btn btn-ghost" style="margin-top:0;font-size:13px;color:var(--text3)" onclick="closeSettings();goPage('admin')">🔧 Neteja del catàleg d'aliments</button>
+    <button class="btn btn-ghost" style="margin-top:0;font-size:13px;color:var(--text)" onclick="closeSettings();goPage('admin')">🔧 Neteja del catàleg d'aliments</button>
   </div>
 </div>
 
@@ -1325,7 +1325,7 @@
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">😕 Producte no trobat</div>
-    <p style="color:var(--text2);font-size:14px;margin-bottom:16px;line-height:1.5">
+    <p style="color:var(--text);font-size:14px;margin-bottom:16px;line-height:1.5">
       Aquest codi de barres no és a OpenFoodFacts. Introdueix les dades nutricionals manualment (valors per 100g).
     </p>
     <div class="form-group">
@@ -1364,7 +1364,7 @@
       <div class="modal-title" id="m-macro-title" style="margin-bottom:0">—</div>
       <button class="btn btn-ghost" style="padding:4px 10px;font-size:13px" onclick="closeMacroModal()">✕</button>
     </div>
-    <div id="m-macro-loading" style="text-align:center;padding:24px 0;color:var(--text3)">⏳ Carregant…</div>
+    <div id="m-macro-loading" style="text-align:center;padding:24px 0;color:var(--text)">⏳ Carregant…</div>
     <div id="m-macro-list" style="display:none"></div>
   </div>
 </div>
@@ -1601,7 +1601,7 @@ async function toggleTorch() {
     _torchOn = !_torchOn;
     await track.torchFeature()?.apply(_torchOn);
     const btn = document.getElementById('btn-torch');
-    if (btn) btn.style.color = _torchOn ? 'var(--accent)' : 'var(--text2)';
+    if (btn) btn.style.color = _torchOn ? 'var(--accent)' : 'var(--text)';
   } catch(e) {
     toast('Llanterna no disponible en aquest dispositiu', 'err');
   }
@@ -1831,7 +1831,7 @@ Respon ÚNICAMENT amb un array JSON sense cap text addicional:
         <input type="radio" name="cat-prod" id="cp-${i}" value="${i}" ${i===0?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;margin-top:3px;flex-shrink:0">
         <label for="cp-${i}" style="cursor:pointer;flex:1">
           <div style="font-size:14px;font-weight:700">${p.nom}</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">${p.kcal} kcal · ${p.proteina_g}g prot · ${p.greix_g}g greix · ${p.carbs_g}g carbs · ${p.fibra_g}g fibra &nbsp;/100g</div>
+          <div style="font-size:11px;color:var(--text);margin-top:2px">${p.kcal} kcal · ${p.proteina_g}g prot · ${p.greix_g}g greix · ${p.carbs_g}g carbs · ${p.fibra_g}g fibra &nbsp;/100g</div>
         </label>
       </div>`).join('');
 
@@ -2465,7 +2465,7 @@ async function loadToday() {
       .filter(k => groups[k])
       .forEach(m => {
         const totalKcal = Math.round(groups[m].reduce((s, e) => s + e.kcal, 0));
-        const style = mealStyle[m] || { bg:'var(--bg2)', accent:'var(--text2)', border:'var(--border)' };
+        const style = mealStyle[m] || { bg:'var(--bg2)', accent:'var(--text)', border:'var(--border)' };
         const g = document.createElement('div');
         g.className = 'mg open';
         g.style.borderColor = style.border;
@@ -2484,7 +2484,7 @@ async function loadToday() {
           </div>
           <div class="mg-body" style="border-top-color:${style.border}">` +
           groups[m].map(e =>
-            `<div id="linies-${e.apatId.replace(/-/g,'')}" style="color:var(--text3);font-size:12px;padding:4px 0 2px">⏳</div>`
+            `<div id="linies-${e.apatId.replace(/-/g,'')}" style="color:var(--text);font-size:12px;padding:4px 0 2px">⏳</div>`
           ).join('') +
           `</div>`;
         el.appendChild(g);
@@ -2605,7 +2605,7 @@ async function loadLiniesApat(apatId) {
       + '<div style="flex:1;min-width:0;display:flex;justify-content:space-between;align-items:center">'
       +   '<div style="flex:1;min-width:0">'
       +     '<div class="entry-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + l.nom + '</div>'
-      +     '<div id="qty-sub-' + lid + '" style="font-size:11px;color:var(--text2);margin-top:2px">'
+      +     '<div id="qty-sub-' + lid + '" style="font-size:11px;color:var(--text);margin-top:2px">'
       +       '<span onclick="startEditQty(\'' + l.id + '\',' + l.qty + ',' + l.kcal + ',' + l.prot + ',' + l.greix + ',' + l.carbs + ',' + l.fibra + ',\'' + elId + '\')" '
       +         'style="cursor:pointer;border-bottom:1px dotted var(--blue);color:var(--blue)">' + Math.round(l.qty) + 'g</span>'
       +       ' · ' + Math.round(l.kcal) + ' kcal'
@@ -2635,7 +2635,7 @@ function startEditQty(liniaId, qty, kcal, prot, greix, carbs, fibra, elId) {
     + '<button onclick="saveEditQty(\'' + liniaId + '\',' + qty + ',' + kcal + ',' + prot + ',' + greix + ',' + carbs + ',' + fibra + ',\'' + elId + '\')" '
     + 'style="background:var(--green);color:white;border:none;border-radius:6px;padding:2px 8px;font-size:12px;cursor:pointer;margin-left:4px">✓</button> '
     + '<button onclick="cancelEditQty(\'' + lid + '\',' + qty + ',' + kcal + ')" '
-    + 'style="background:none;border:none;color:var(--text3);font-size:14px;cursor:pointer;padding:2px">✕</button>';
+    + 'style="background:none;border:none;color:var(--text);font-size:14px;cursor:pointer;padding:2px">✕</button>';
   setTimeout(() => {
     const inp = document.getElementById('eq-' + lid);
     if (inp) { inp.focus(); inp.select(); }
@@ -2646,7 +2646,7 @@ function cancelEditQty(lid, qty, kcal) {
   const sub = document.getElementById('qty-sub-' + lid);
   if (!sub) return;
   // Restaura l'element original — no tenim l.id aquí, fem servir lid
-  sub.innerHTML = '<span style="color:var(--text3)">' + Math.round(qty) + 'g · ' + Math.round(kcal) + ' kcal</span>';
+  sub.innerHTML = '<span style="color:var(--text)">' + Math.round(qty) + 'g · ' + Math.round(kcal) + ' kcal</span>';
 }
 
 async function saveEditQty(liniaId, oldQty, oldKcal, oldProt, oldGreix, oldCarbs, oldFibra, elId) {
@@ -2666,7 +2666,7 @@ async function saveEditQty(liniaId, oldQty, oldKcal, oldProt, oldGreix, oldCarbs
   const newFibra = Math.round(oldFibra * f * 10) / 10;
 
   const sub = document.getElementById('qty-sub-' + lid);
-  if (sub) sub.innerHTML = '<span style="color:var(--text3)">⏳ Desant…</span>';
+  if (sub) sub.innerHTML = '<span style="color:var(--text)">⏳ Desant…</span>';
 
   try {
     await nPatch(liniaId, {
@@ -2750,7 +2750,7 @@ async function deleteLinia(liniaId, parentElId) {
     toast('🗑 Línia esborrada', 'ok');
     // Refresca la secció del àpat
     const el = document.getElementById(parentElId);
-    if (el) el.innerHTML = '<span style="color:var(--text3);font-size:12px">⏳</span>';
+    if (el) el.innerHTML = '<span style="color:var(--text);font-size:12px">⏳</span>';
     // Extreu apatId del parentElId i torna a carregar
     const apatIdFlat = parentElId.replace('linies-', '');
     const apatId = apatIdFlat.replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5');
@@ -2836,7 +2836,7 @@ async function loadPesHistory() {
         diffHtml = '<span style="color:' + col + ';font-size:11px;font-weight:600">' + sign + dif.toFixed(1) + ' kg</span>';
       }
       rows.push('<div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:0 12px;padding:9px 0;border-bottom:1px solid var(--border)">'
-        + '<span style="color:var(--text2);font-size:13px">' + dateLbl + '</span>'
+        + '<span style="color:var(--text);font-size:13px">' + dateLbl + '</span>'
         + '<span style="font-size:16px;font-weight:700;text-align:right">' + e.pes.toFixed(1) + ' kg</span>'
         + '<span style="min-width:52px;text-align:right">' + diffHtml + '</span>'
         + '</div>');
@@ -2845,7 +2845,7 @@ async function loadPesHistory() {
     /*
       const diffTxt = diff != null ? `<span style="color:${diff <= 0 ? 'var(--green)' : 'var(--red)';font-size:11px;font-weight:600">${diff > 0 ? '+' : ''}${diff.toFixed(1)} kg</span>` : '';
       return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--text2);font-size:13px">${wd[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}</span>
+        <span style="color:var(--text);font-size:13px">${wd[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}</span>
         <span style="font-size:16px;font-weight:700">${e.pes.toFixed(1)} kg</span>
         ${diffTxt}
       </div>`;
@@ -3218,7 +3218,7 @@ function renderExEntries(entries) {
   const bannerEl = document.getElementById('ex-obj-banner');
 
   if (!entries.length) {
-    listEl.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:4px 0">Cap exercici registrat avui</div>';
+    listEl.innerHTML = '<div style="font-size:13px;color:var(--text);padding:4px 0">Cap exercici registrat avui</div>';
     totalEl.style.display = 'none';
     bannerEl.style.display = 'none';
     updateKcalRing(undefined, undefined, 0);
@@ -3234,7 +3234,7 @@ function renderExEntries(entries) {
     if (e.min)    detalls.push(`${e.min} min`);
     if (e.passos) detalls.push(`~${e.passos.toLocaleString()}p`);
     const detallHtml = detalls.length
-      ? `<span style="color:var(--text3);font-size:11px;margin-left:6px">${detalls.join(' · ')}</span>`
+      ? `<span style="color:var(--text);font-size:11px;margin-left:6px">${detalls.join(' · ')}</span>`
       : '';
     return `
     <div class="ex-entry">
@@ -3268,7 +3268,7 @@ async function loadExercici(dateStr) {
   if (!cfg.notionToken) return;
   exDateStr = dateStr || todayISO();
   const listEl = document.getElementById('ex-list');
-  if (listEl) listEl.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:4px 0">⏳ Carregant…</div>';
+  if (listEl) listEl.innerHTML = '<div style="font-size:13px;color:var(--text);padding:4px 0">⏳ Carregant…</div>';
 
   try {
     const res = await nQuery(DB_EXERCICIS, { property: 'Data', date: { equals: exDateStr } });
@@ -3299,7 +3299,7 @@ const apatColors = {
   Dinar:   'background:rgba(249,115,22,.15);color:#c2440f',
   Berenar: 'background:rgba(16,185,129,.15);color:#15803d',
   Sopar:   'background:rgba(59,130,246,.15);color:#2563eb',
-  Qualsevol:'background:rgba(0,0,0,.07);color:var(--text3)',
+  Qualsevol:'background:rgba(0,0,0,.07);color:var(--text)',
 };
 
 function togglePlatForm(show, plat) {
@@ -3449,7 +3449,7 @@ function renderPlatsList() {
   }
 
   const apatColors = {
-    Qualsevol:'color:var(--text3);background:var(--bg2)',
+    Qualsevol:'color:var(--text);background:var(--bg2)',
     Esmorzar:'color:#b45309;background:#fef3c7',
     Dinar:'color:#0369a1;background:#e0f2fe',
     Berenar:'color:#15803d;background:#dcfce7',
@@ -3464,7 +3464,7 @@ function renderPlatsList() {
       </div>
       ${p.ingredients ? `<div class="plat-ing">${p.ingredients}</div>` : ''}
       ${p.notes ? `<div style="font-size:11px;color:var(--blue);margin-top:4px">💬 ${p.notes}</div>` : ''}
-      ${p.racions ? `<div style="font-size:11px;color:var(--text3);margin-top:4px">🍽️ ${p.racions} racions · usa <b>1/${p.racions}</b> al camp ració</div>` : ''}
+      ${p.racions ? `<div style="font-size:11px;color:var(--text);margin-top:4px">🍽️ ${p.racions} racions · usa <b>1/${p.racions}</b> al camp ració</div>` : ''}
       <div class="plat-actions">
         <button class="btn btn-primary btn-sm" onclick="usePlatById('${p.id}')">
           ➕ ${p.apat !== 'Qualsevol' ? p.apat : 'Afegir avui'}
@@ -3720,7 +3720,7 @@ async function loadCerca() {
       .filter(k => groups[k])
       .forEach(m => {
         const totalKcal = Math.round(groups[m].reduce((s, e) => s + e.kcal, 0));
-        const style = mealStyle[m] || { bg:'var(--bg2)', accent:'var(--text2)', border:'var(--border)' };
+        const style = mealStyle[m] || { bg:'var(--bg2)', accent:'var(--text)', border:'var(--border)' };
         const g = document.createElement('div');
         g.className = 'mg open';
         g.style.borderColor = style.border;
@@ -3957,7 +3957,7 @@ async function loadSetmana() {
       const isOver  = d.kcal > target * 1.1;
       const isOk    = d.kcal >= target * 0.85 && !isOver && d.kcal > 0;
       const dotColor  = isOver ? 'var(--red)' : isOk ? 'var(--green)' : (d.kcal > 0 ? 'var(--yellow)' : 'rgba(0,0,0,.12)');
-      const kcalColor = !d.hasData ? 'var(--text3)' : d.kcal <= target ? 'var(--green)' : 'var(--red)';
+      const kcalColor = !d.hasData ? 'var(--text)' : d.kcal <= target ? 'var(--green)' : 'var(--red)';
       const netColor  = net >= 0 ? 'var(--green)' : 'var(--red)';
       const dayLabel  = ['Diumenge','Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte'][date.getDay()];
       const dateLabel = `${date.getDate()} ${monthNames[date.getMonth()]}`;
@@ -3971,7 +3971,7 @@ async function loadSetmana() {
           <div class="wday-dot" style="background:${d.cancelled ? 'transparent' : netColor}${d.cancelled ? ';display:flex;align-items:center;justify-content:center;width:auto;height:auto;font-size:11px' : ''}">${d.cancelled ? '🚫' : ''}</div>
           <div>
             <div class="wday-name">${dayLabel}</div>
-            <div style="font-size:11px;color:var(--text3)">${dateLabel}</div>
+            <div style="font-size:11px;color:var(--text)">${dateLabel}</div>
           </div>
         </div>
         <div class="wday-right">
@@ -4177,7 +4177,7 @@ async function loadAdminDuplicats() {
     }
 
     el.innerHTML = `<div class="card" style="margin-bottom:8px">
-      <div style="font-size:13px;color:var(--text2)">S'han detectat <b>${duplicats.length} grups</b> amb possibles duplicats. Tria quina entrada vols conservar per a cada grup:</div>
+      <div style="font-size:13px;color:var(--text)">S'han detectat <b>${duplicats.length} grups</b> amb possibles duplicats. Tria quina entrada vols conservar per a cada grup:</div>
     </div>`;
 
     duplicats.forEach((grup, gi) => {
@@ -4187,13 +4187,13 @@ async function loadAdminDuplicats() {
       card.id = `dup-grup-${gi}`;
 
       const nomNorm = normalitzaNom(grup[0].nom);
-      card.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">${nomNorm}</div>` +
+      card.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">${nomNorm}</div>` +
         grup.map((a, ai) => `
           <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
             <input type="radio" name="dup-${gi}" id="dup-${gi}-${ai}" value="${a.id}" ${ai===0?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;flex-shrink:0">
             <label for="dup-${gi}-${ai}" style="flex:1;cursor:pointer">
               <div style="font-size:14px;font-weight:700">${a.nom}</div>
-              <div style="font-size:11px;color:var(--text3)">${a.kcal ?? '?'} kcal/100g · ${a.greix ?? '?'} g greix · <a href="${a.url}" target="_blank" style="color:var(--blue)">Notion ↗</a></div>
+              <div style="font-size:11px;color:var(--text)">${a.kcal ?? '?'} kcal/100g · ${a.greix ?? '?'} g greix · <a href="${a.url}" target="_blank" style="color:var(--blue)">Notion ↗</a></div>
             </label>
           </div>`).join('') +
         `<button class="btn btn-primary" style="margin-top:10px;font-size:13px" onclick="fusionaDuplicat(${gi})">🔀 Fusiona (conserva el seleccionat)</button>`;
@@ -4214,7 +4214,7 @@ async function fusionaDuplicat(gi) {
   const dolents = ids.filter(id => id !== bonId);
 
   const card = document.getElementById(`dup-grup-${gi}`);
-  card.innerHTML = '<div style="padding:12px;color:var(--text3);font-size:13px">⏳ Fusionant…</div>';
+  card.innerHTML = '<div style="padding:12px;color:var(--text);font-size:13px">⏳ Fusionant…</div>';
 
   try {
     for (const malId of dolents) {
@@ -4259,7 +4259,7 @@ async function cercaAlimentAdmin() {
 
   // Carrega catàleg si no el tenim
   if (!_adminAliments.length) {
-    resEl.innerHTML = '<div style="font-size:12px;color:var(--text3)">⏳ Carregant catàleg…</div>';
+    resEl.innerHTML = '<div style="font-size:12px;color:var(--text)">⏳ Carregant catàleg…</div>';
     let cursor;
     do {
       const body = { page_size: 100 };
@@ -4284,12 +4284,12 @@ async function cercaAlimentAdmin() {
   }
 
   const trobats = _adminAliments.filter(a => normalitzaNom(a.nom).includes(normalitzaNom(q))).slice(0, 8);
-  if (!trobats.length) { resEl.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:4px 0">Cap resultat</div>'; return; }
+  if (!trobats.length) { resEl.innerHTML = '<div style="font-size:12px;color:var(--text);padding:4px 0">Cap resultat</div>'; return; }
 
   resEl.innerHTML = trobats.map(a =>
     `<div onclick="seleccionaAlimentAdmin('${a.id}')" style="padding:8px 10px;margin-bottom:4px;background:var(--bg2);border-radius:8px;cursor:pointer;border:1.5px solid transparent" id="adm-opt-${a.id.replace(/-/g,'')}">
       <div style="font-size:14px;font-weight:700">${a.nom}</div>
-      <div style="font-size:11px;color:var(--text3)">${a.kcal} kcal · ${a.prot}g prot · ${a.greix}g greix · ${a.carbs}g carbs /100g</div>
+      <div style="font-size:11px;color:var(--text)">${a.kcal} kcal · ${a.prot}g prot · ${a.greix}g greix · ${a.carbs}g carbs /100g</div>
     </div>`
   ).join('');
 }
@@ -4465,7 +4465,7 @@ Format: [{"nom":"string","quantitat_g":number,"kcal":number,"proteina_g":number,
 function mostrarFotoResultats() {
   const el = document.getElementById('foto-resultats');
   if (!_fotoItems.length) {
-    el.innerHTML = '<div class="card" style="color:var(--text3);text-align:center">No s\'han detectat aliments</div>';
+    el.innerHTML = '<div class="card" style="color:var(--text);text-align:center">No s\'han detectat aliments</div>';
     return;
   }
   const totalKcal = _fotoItems.reduce((s, i) => s + (i.kcal || 0), 0);
@@ -4475,7 +4475,7 @@ function mostrarFotoResultats() {
     html += '<div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">'
       + '<div>'
       +   '<div style="font-size:14px;font-weight:700">' + it.nom + '</div>'
-      +   '<div style="font-size:11px;color:var(--text3);margin-top:2px">'
+      +   '<div style="font-size:11px;color:var(--text);margin-top:2px">'
       +     '<input type="number" value="' + Math.round(it.quantitat_g) + '" min="1" max="2000" '
       +     'onchange="_fotoItems[' + idx + '].quantitat_g=+this.value;recalcFotoItem(' + idx + ',this.value)" '
       +     'style="width:52px;font-size:12px;padding:2px 5px;border:1.5px solid var(--blue);border-radius:6px;text-align:center">g'
@@ -4668,9 +4668,9 @@ async function loadFotoHistorial() {
   <div style="padding:7px 9px">
     <div style="font-weight:600;font-size:13px;line-height:1.3;margin-bottom:3px;
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${nom}">${nom}</div>
-    <div style="font-size:12px;color:var(--text2)">${kcal ? kcal+' kcal' : ''} ${apat ? '· '+apat : ''}</div>
+    <div style="font-size:12px;color:var(--text)">${kcal ? kcal+' kcal' : ''} ${apat ? '· '+apat : ''}</div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
-      <span style="font-size:11px;color:var(--text2)">${dataFmt}</span>
+      <span style="font-size:11px;color:var(--text)">${dataFmt}</span>
       ${notionLink}
     </div>
   </div>
