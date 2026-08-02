@@ -363,7 +363,7 @@
     }
 
     /* ── WEEK VIEW ── */
-    .week-stat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:12px; }
+    .week-stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px; }
     .wstat { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 8px; text-align:center; }
     .wstat-val { font-size:20px; font-weight:800; line-height:1; }
     .wstat-lbl { font-size:10px; color:var(--text3); margin-top:4px; text-transform:uppercase; letter-spacing:.8px; }
@@ -748,19 +748,12 @@
 
   <!-- Stats summary -->
   <div class="week-stat-grid" id="w-stats">
-    <div class="wstat">
-      <div class="wstat-val" id="w-avg">—</div>
-      <div class="wstat-lbl">Mitja kcal 🍽️</div>
-      <div style="font-size:13px;font-weight:700;color:var(--blue);margin-top:5px;line-height:1" id="w-avg-ex">—</div>
-      <div class="wstat-lbl">Mitja exercici 🏃</div>
-    </div>
-    <div class="wstat"><div class="wstat-val" id="w-ok">—</div><div class="wstat-lbl">Dies OK</div></div>
+    <div class="wstat"><div class="wstat-val" id="w-avg">—</div><div class="wstat-lbl">Mitja kcal 🍽️</div></div>
+    <div class="wstat"><div class="wstat-val" id="w-avg-carbs">—</div><div class="wstat-lbl">Mitja carbs 🍞</div></div>
+    <div class="wstat"><div class="wstat-val" id="w-avg-greix">—</div><div class="wstat-lbl">Mitja greix 🥑</div></div>
+    <div class="wstat"><div class="wstat-val" id="w-avg-prot">—</div><div class="wstat-lbl">Mitja prot 🥩</div></div>
+    <div class="wstat"><div class="wstat-val" id="w-avg-fibra">—</div><div class="wstat-lbl">Mitja fibra 🌾</div></div>
     <div class="wstat"><div class="wstat-val" id="w-streak">—</div><div class="wstat-lbl">Ratxa</div></div>
-    <div class="wstat">
-      <div class="wstat-val" id="w-vel">—</div>
-      <div class="wstat-lbl">Velocitat pèrdua</div>
-      <div style="font-size:10px;color:var(--text3);margin-top:4px" id="w-vel-lbl"></div>
-    </div>
   </div>
 
   <!-- Bar chart -->
@@ -3829,12 +3822,24 @@ async function loadSetmana() {
       ]
     });
     const kcalByDate = {};
+    const carbsByDate = {};
+    const greixByDate = {};
+    const protByDate = {};
+    const fibraByDate = {};
     for (const apat of (apatsRes.results || [])) {
       const p = apat.properties;
       const dateVal = p['Data']?.date?.start?.split('T')[0];
       if (!dateVal) continue;
-      const kcal = p['f_kcal']?.formula?.number || p['Kcal']?.rollup?.number || 0;
-      kcalByDate[dateVal] = (kcalByDate[dateVal] || 0) + kcal;
+      const kcal  = p['f_kcal']?.formula?.number  || p['Kcal']?.rollup?.number         || 0;
+      const carbs = p['f_carbs']?.formula?.number || p['Carbs total (g)']?.rollup?.number || 0;
+      const greix = p['f_greix']?.formula?.number || p['Greix total (g)']?.rollup?.number || 0;
+      const prot  = p['f_prot']?.formula?.number  || p['Prot total (g)']?.rollup?.number  || 0;
+      const fibra = p['f_fibra']?.formula?.number || p['Fibra total (g)']?.rollup?.number || 0;
+      kcalByDate[dateVal]  = (kcalByDate[dateVal]  || 0) + kcal;
+      carbsByDate[dateVal] = (carbsByDate[dateVal] || 0) + carbs;
+      greixByDate[dateVal] = (greixByDate[dateVal] || 0) + greix;
+      protByDate[dateVal]  = (protByDate[dateVal]  || 0) + prot;
+      fibraByDate[dateVal] = (fibraByDate[dateVal] || 0) + fibra;
     }
 
     // Exercici → kcal cremades per dia
@@ -3876,7 +3881,11 @@ async function loadSetmana() {
     // Construeix array de dies amb totes les dades
     const dayData = days.map(d => ({
       date:      d,
-      kcal:      kcalByDate[d] || 0,
+      kcal:      kcalByDate[d]  || 0,
+      carbs:     carbsByDate[d] || 0,
+      greix:     greixByDate[d] || 0,
+      prot:      protByDate[d]  || 0,
+      fibra:     fibraByDate[d] || 0,
       exKcal:    exByDate[d]   || 0,
       objKcal:   objByDate[d]  || defaultObj,
       hasData:   !!kcalByDate[d] && !cancelledByDate[d],
@@ -3888,15 +3897,13 @@ async function loadSetmana() {
 
     // Estadístiques (basat en target ajustat amb exercici)
     const withData = dayData.filter(d => d.hasData && d.kcal > 0);
-    const avgKcal  = withData.length
-      ? Math.round(withData.reduce((s, d) => s + d.kcal, 0) / withData.length) : 0;
-    const withEx   = dayData.filter(d => d.exKcal > 0 && !d.cancelled);
-    const avgEx    = withEx.length
-      ? Math.round(withEx.reduce((s, d) => s + d.exKcal, 0) / withEx.length) : 0;
-    const daysOk   = withData.filter(d => {
-      const target = d.objKcal + d.exKcal;
-      return d.kcal >= target * 0.85 && d.kcal <= target * 1.1;
-    }).length;
+    const avg = (key) => withData.length
+      ? Math.round(withData.reduce((s, d) => s + d[key], 0) / withData.length) : 0;
+    const avgKcal  = avg('kcal');
+    const avgCarbs = avg('carbs');
+    const avgGreix = avg('greix');
+    const avgProt  = avg('prot');
+    const avgFibra = avg('fibra');
 
     // Ratxa: dies consecutius OK ending en el darrer dia
     let streak = 0;
@@ -3908,20 +3915,11 @@ async function loadSetmana() {
     }
 
     document.getElementById('w-avg').textContent = avgKcal || '—';
-    document.getElementById('w-avg-ex').textContent = avgEx ? avgEx + ' kcal' : '—';
-    document.getElementById('w-ok').textContent = daysOk + '/7';
+    document.getElementById('w-avg-carbs').textContent = withData.length ? avgCarbs + 'g' : '—';
+    document.getElementById('w-avg-greix').textContent = withData.length ? avgGreix + 'g' : '—';
+    document.getElementById('w-avg-prot').textContent  = withData.length ? avgProt  + 'g' : '—';
+    document.getElementById('w-avg-fibra').textContent = withData.length ? avgFibra + 'g' : '—';
     document.getElementById('w-streak').textContent = streak + '🔥';
-
-    // Velocitat actual des de Configuració
-    nGetPage(CONFIG_ID).then(cfgPage => {
-      const vel = cfgPage?.properties?.['Velocitat']?.number;
-      if (vel != null) {
-        document.getElementById('w-vel').textContent = vel + ' kg/set';
-        const velLbl = vel === 0 ? 'Manteniment' : vel <= 0.25 ? 'Ritme suau' : vel <= 0.5 ? 'Ritme moderat' : 'Ritme intens';
-        document.getElementById('w-vel-lbl').textContent = velLbl;
-        document.getElementById('w-vel').style.color = vel === 0 ? 'var(--text2)' : vel <= 0.25 ? 'var(--green)' : vel <= 0.5 ? 'var(--yellow)' : 'var(--accent)';
-      }
-    }).catch(() => {});
 
     // Gràfic de barres
     const maxKcal = Math.max(...dayData.map(d => d.kcal + d.exKcal), lastObj * 1.15, 100);
