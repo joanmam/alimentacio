@@ -2287,38 +2287,57 @@ async function showMacroModal(macro) {
       });
     }
 
-    // Sort descending by selected macro
-    allLinies.sort((a, b) => b[macro] - a[macro]);
-
     const total = allLinies.reduce((s, l) => s + l[macro], 0);
     const mealIcons = { Esmorzar:'☀️', Dinar:'🍽️', Berenar:'🍎', Sopar:'🌙', Altres:'🍴' };
+    const mealOrderModal = ['Esmorzar','Dinar','Berenar','Sopar'];
 
-    const rows = allLinies.map(l => {
-      const val = l[macro];
-      const pct = total > 0 ? Math.round(val / total * 100) : 0;
-      const icon = mealIcons[l.tipus] || '🍴';
-      return '<div class="macro-row">'
-        + '<div style="flex:1;min-width:0">'
-        +   '<div class="macro-row-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + l.nom + '</div>'
-        +   '<div class="macro-row-meal">' + icon + ' ' + l.tipus + ' &nbsp;·&nbsp; ' + Math.round(l.qty) + 'g &nbsp;·&nbsp; ' + Math.round(l.kcal) + ' kcal</div>'
-        + '</div>'
-        + '<div style="text-align:right;flex-shrink:0">'
-        +   '<div class="macro-row-val" style="color:' + meta.color + '">' + val.toFixed(1) + 'g</div>'
-        +   '<div class="macro-row-kcal">' + pct + '%</div>'
-        + '</div>'
-        + '<a class="macro-row-link" href="' + l.notionUrl + '" target="_blank" onclick="event.stopPropagation()">↗</a>'
+    // Group by àpat
+    const groups = {};
+    for (const l of allLinies) {
+      if (!groups[l.tipus]) groups[l.tipus] = [];
+      groups[l.tipus].push(l);
+    }
+    const orderedMeals = [...mealOrderModal, ...Object.keys(groups).filter(k => !mealOrderModal.includes(k))]
+      .filter(k => groups[k] && groups[k].length);
+
+    let bodyHtml = '';
+    for (const m of orderedMeals) {
+      const items = groups[m].slice().sort((a, b) => b[macro] - a[macro]);
+      const mealTotal = items.reduce((s, l) => s + l[macro], 0);
+      const mealPct = total > 0 ? Math.round(mealTotal / total * 100) : 0;
+      const icon = mealIcons[m] || '🍴';
+
+      bodyHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 4px;margin-top:8px;font-weight:600;font-size:13px;color:var(--text)">'
+        + '<span>' + icon + ' ' + m + '</span>'
+        + '<span style="color:' + meta.color + '">' + mealTotal.toFixed(1) + 'g &nbsp;·&nbsp; ' + mealPct + '%</span>'
         + '</div>';
-    });
+
+      bodyHtml += items.map(l => {
+        const val = l[macro];
+        const pct = total > 0 ? Math.round(val / total * 100) : 0;
+        return '<div class="macro-row">'
+          + '<div style="flex:1;min-width:0">'
+          +   '<div class="macro-row-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + l.nom + '</div>'
+          +   '<div class="macro-row-meal">' + Math.round(l.qty) + 'g &nbsp;·&nbsp; ' + Math.round(l.kcal) + ' kcal</div>'
+          + '</div>'
+          + '<div style="text-align:right;flex-shrink:0">'
+          +   '<div class="macro-row-val" style="color:' + meta.color + '">' + val.toFixed(1) + 'g</div>'
+          +   '<div class="macro-row-kcal">' + pct + '%</div>'
+          + '</div>'
+          + '<a class="macro-row-link" href="' + l.notionUrl + '" target="_blank" onclick="event.stopPropagation()">↗</a>'
+          + '</div>';
+      }).join('');
+    }
 
     const listEl = document.getElementById('m-macro-list');
-    if (!rows.length) {
+    if (!allLinies.length) {
       listEl.innerHTML = '<div class="empty"><div class="empty-txt">Cap línia trobada</div></div>';
     } else {
       const totRow = '<div style="display:flex;justify-content:space-between;padding:10px 0 14px;font-weight:700;border-bottom:2px solid var(--border);margin-bottom:4px">'
         + '<span>TOTAL</span>'
         + '<span style="color:' + meta.color + '">' + total.toFixed(1) + 'g</span>'
         + '</div>';
-      listEl.innerHTML = totRow + rows.join('');
+      listEl.innerHTML = totRow + bodyHtml;
     }
 
     document.getElementById('m-macro-loading').style.display = 'none';
