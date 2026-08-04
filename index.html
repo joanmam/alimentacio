@@ -2291,12 +2291,6 @@ async function showMacroModal(macro) {
     const mealIcons = { Esmorzar:'☀️', Dinar:'🍽️', Berenar:'🍎', Sopar:'🌙', Altres:'🍴' };
     const mealOrderModal = ['Esmorzar','Dinar','Berenar','Sopar'];
 
-    // % que representa aquest macro sobre la ingesta calòrica total del dia
-    const kcalPerG = { prot: 4, greix: 9, carbs: 4, fibra: 2 };
-    const totalDayKcal = allLinies.reduce((s, l) => s + l.kcal, 0);
-    const totalMacroKcal = total * kcalPerG[macro];
-    const totalDayPct = totalDayKcal > 0 ? Math.round(totalMacroKcal / totalDayKcal * 100) : 0;
-
     // Group by àpat
     const groups = {};
     for (const l of allLinies) {
@@ -2341,7 +2335,7 @@ async function showMacroModal(macro) {
     } else {
       const totRow = '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 0 14px;font-weight:700;border-bottom:2px solid var(--border);margin-bottom:4px;color:var(--red)">'
         + '<span>TOTAL DEL DIA</span>'
-        + '<span>' + total.toFixed(1) + 'g <span style="font-size:12px;font-weight:600;opacity:.85">(' + totalDayPct + '% de la ingesta calòrica)</span></span>'
+        + '<span>' + total.toFixed(1) + 'g</span>'
         + '</div>';
       listEl.innerHTML = totRow + bodyHtml;
     }
