@@ -2313,9 +2313,9 @@ async function showMacroModal(macro) {
       const mealPct = total > 0 ? Math.round(mealTotal / total * 100) : 0;
       const icon = mealIcons[m] || '🍴';
 
-      bodyHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 4px;margin-top:8px;font-weight:600;font-size:13px;color:var(--text)">'
+      bodyHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 4px;margin-top:8px;font-weight:600;font-size:13px;color:var(--red)">'
         + '<span>' + icon + ' ' + m + '</span>'
-        + '<span style="color:' + meta.color + '">' + mealTotal.toFixed(1) + 'g &nbsp;·&nbsp; ' + mealPct + '%</span>'
+        + '<span>' + mealTotal.toFixed(1) + 'g &nbsp;·&nbsp; ' + mealPct + '%</span>'
         + '</div>';
 
       bodyHtml += items.map(l => {
@@ -2339,9 +2339,9 @@ async function showMacroModal(macro) {
     if (!allLinies.length) {
       listEl.innerHTML = '<div class="empty"><div class="empty-txt">Cap línia trobada</div></div>';
     } else {
-      const totRow = '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 0 14px;font-weight:700;border-bottom:2px solid var(--border);margin-bottom:4px">'
+      const totRow = '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 0 14px;font-weight:700;border-bottom:2px solid var(--border);margin-bottom:4px;color:var(--red)">'
         + '<span>TOTAL DEL DIA</span>'
-        + '<span style="color:' + meta.color + '">' + total.toFixed(1) + 'g <span style="font-size:12px;font-weight:600;opacity:.75">(' + totalDayPct + '% de la ingesta calòrica)</span></span>'
+        + '<span>' + total.toFixed(1) + 'g <span style="font-size:12px;font-weight:600;opacity:.85">(' + totalDayPct + '% de la ingesta calòrica)</span></span>'
         + '</div>';
       listEl.innerHTML = totRow + bodyHtml;
     }
