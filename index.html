@@ -897,6 +897,14 @@
     <button class="btn btn-primary btn-sm" id="btn-nou-plat" onclick="togglePlatForm(true)">＋ Nou plat</button>
   </div>
 
+  <!-- Buscadors (un per pestanya) -->
+  <div class="form-group" style="margin-bottom:12px">
+    <input type="text" id="plat-search-myplats" placeholder="🔍 Cerca un plat…" autocomplete="off"
+      oninput="onPlatSearchInput(this.value)" style="font-size:15px">
+    <input type="text" id="plat-search-receptes" placeholder="🔍 Cerca una recepta…" autocomplete="off"
+      oninput="onPlatSearchInput(this.value)" style="font-size:15px;display:none">
+  </div>
+
   <!-- Formulari nou/editar plat -->
   <div class="plat-form" id="plat-form" style="display:none">
     <div class="card-title" id="plat-form-title" style="margin-bottom:12px">Nou plat</div>
@@ -3455,6 +3463,7 @@ let _platPendent = null;
 const _platsCache = {};
 let _platTab = 'myplats'; // tab activa: 'myplats' | 'receptes'
 let _allPlats = [];       // tots els plats carregats
+const _platSearch = { myplats: '', receptes: '' }; // cerca independent per pestanya
 
 function switchPlatTab(tab) {
   _platTab = tab;
@@ -3462,18 +3471,37 @@ function switchPlatTab(tab) {
   document.getElementById('tab-receptes').classList.toggle('active', tab === 'receptes');
   // El botó "+ Nou plat" només té sentit a "Els meus plats"
   document.getElementById('btn-nou-plat').style.display = tab === 'myplats' ? '' : 'none';
+  // Mostrar només el buscador de la pestanya activa
+  document.getElementById('plat-search-myplats').style.display = tab === 'myplats' ? '' : 'none';
+  document.getElementById('plat-search-receptes').style.display = tab === 'receptes' ? '' : 'none';
+  renderPlatsList();
+}
+
+function onPlatSearchInput(val) {
+  _platSearch[_platTab] = val;
   renderPlatsList();
 }
 
 function renderPlatsList() {
   const listEl = document.getElementById('plats-list');
-  const subset = _allPlats.filter(p => _platTab === 'receptes' ? p.origen === 'recepta' : p.origen !== 'recepta');
+  let subset = _allPlats.filter(p => _platTab === 'receptes' ? p.origen === 'recepta' : p.origen !== 'recepta');
+
+  const q = normalitzaNom(_platSearch[_platTab] || '');
+  if (q) {
+    subset = subset.filter(p =>
+      normalitzaNom(p.nom || '').includes(q) ||
+      normalitzaNom(p.ingredients || '').includes(q) ||
+      normalitzaNom(p.notes || '').includes(q)
+    );
+  }
 
   if (!subset.length) {
-    const msg = _platTab === 'receptes'
-      ? 'Cap recepta importada encara.<br>Usa el botó 🥗 a <b>recetasclaude.netlify.app</b>'
-      : 'Encara no tens cap plat definit.<br>Prem "+ Nou plat" per crear-ne un.';
-    listEl.innerHTML = '<div class="empty"><div class="empty-icon">' + (_platTab === 'receptes' ? '🥗' : '🍽️') + '</div><div class="empty-txt">' + msg + '</div></div>';
+    const cercantMsg = q
+      ? 'Cap resultat per a "' + _platSearch[_platTab] + '"'
+      : (_platTab === 'receptes'
+          ? 'Cap recepta importada encara.<br>Usa el botó 🥗 a <b>recetasclaude.netlify.app</b>'
+          : 'Encara no tens cap plat definit.<br>Prem "+ Nou plat" per crear-ne un.');
+    listEl.innerHTML = '<div class="empty"><div class="empty-icon">' + (q ? '🔍' : (_platTab === 'receptes' ? '🥗' : '🍽️')) + '</div><div class="empty-txt">' + cercantMsg + '</div></div>';
     return;
   }
 
