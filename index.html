@@ -243,6 +243,16 @@
     .mg.select-mode .btn-sel-toggle { background:var(--bg2); border-color:var(--text3); }
     .btn-del-sel { background:var(--red); color:white; border:none; border-radius:7px; padding:3px 9px; font-size:12px; font-weight:700; cursor:pointer; display:none; }
     .mg.select-mode .btn-del-sel { display:inline-flex; align-items:center; gap:3px; }
+    /* Grup de plat/recepta dins d'un àpat (diferent de .mg per no interferir amb el select-mode) */
+    .pg { margin:4px 0 8px; border:1.5px solid var(--border); border-radius:10px; overflow:hidden; background:var(--bg2); }
+    .pg-header { display:flex; align-items:center; justify-content:space-between; padding:8px 10px; cursor:pointer; user-select:none; -webkit-user-select:none; }
+    .pg-header-left { display:flex; align-items:center; gap:8px; min-width:0 }
+    .pg-nom { font-size:13px; font-weight:700; color:var(--red); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+    .pg-kcal { font-size:12px; font-weight:600; color:var(--red); flex-shrink:0 }
+    .pg-chevron { font-size:10px; color:var(--text); transition:transform .25s; flex-shrink:0 }
+    .pg.open > .pg-header .pg-chevron { transform:rotate(180deg); }
+    .pg-body { display:none; border-top:1.5px solid var(--border); padding:0 10px; }
+    .pg.open > .pg-body { display:block; }
     .entry-row {
       display:flex; justify-content:space-between; align-items:center;
       padding:9px 0; border-bottom:1px solid rgba(255,255,255,.06);
@@ -1424,6 +1434,7 @@ let scanning = false;
 let _todayApatMap = {}; // apatId → { tipus, notionUrl } — populated by loadToday()
 let _avuiSenseDades = false; // true si avui s'ha marcat com "Sense dades" (dia cancel·lat)
 let _platPorcioFactor = 1; // factor de ració quan s'usa un plat (½, ⅓, etc.)
+let _platBatchPendent = null; // {id, nom, batch} — marca les línies creades des d'un plat/recepta perquè es puguin agrupar
 
 // ── INIT ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -1515,6 +1526,8 @@ function setDates() {
 
 // ── NAVIGATION ────────────────────────────────────────
 function goPage(tab) {
+  // Si marxem de la pàgina Text sense desar, no arrosseguem l'etiqueta de plat pendent a una futura entrada manual
+  if (tab !== 'text') _platBatchPendent = null;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + tab).classList.add('active');
@@ -1900,6 +1913,7 @@ function removeItem(i) {
 function clearText() {
   items = [];
   document.getElementById('interp-results').style.display = 'none';
+  _platBatchPendent = null;
 }
 
 // ── NOTION API ────────────────────────────────────────
@@ -2202,7 +2216,10 @@ async function saveText() {
         carbs: Math.round(actualPer100.carbs * qty / 100 * 10) / 10,
         fibra: Math.round(actualPer100.fibra * qty / 100 * 10) / 10,
       };
-      await createLinia(apatId, alimentId, `${it.nom} ${qty}g`, qty, macros);
+      const platTag = _platBatchPendent
+        ? ` [[plat:${_platBatchPendent.id}:${_platBatchPendent.batch}:${encodeURIComponent(_platBatchPendent.nom)}]]`
+        : '';
+      await createLinia(apatId, alimentId, `${it.nom} ${qty}g${platTag}`, qty, macros);
     }
 
     toast(`✅ ${items.length} aliment(s) afegit(s)!`, 'ok');
@@ -2613,12 +2630,23 @@ async function loadLiniesApat(apatId) {
       if (nom) nomById[pg.id] = nom;
     }
 
+    const platTagRe = /\s*\[\[plat:([^:]*):([^:]*):([^\]]*)\]\]\s*/;
+
     const linies = (res.results || []).map(pg => {
       const pp = pg.properties;
       // Prioritza nom de l'Aliment/Recepta del catàleg; fallback a Descripció
       const relId = pp['Aliment']?.relation?.[0]?.id || pp['Recepta']?.relation?.[0]?.id;
       const nomCataleg = relId ? nomById[relId] : null;
-      const rawNom = pp['Descripció']?.title?.[0]?.plain_text || '—';
+      let rawNom = pp['Descripció']?.title?.[0]?.plain_text || '—';
+
+      // Extreu el tag ocult de plat/recepta (si n'hi ha) i el treu del text
+      let platGroup = null;
+      const tagMatch = rawNom.match(platTagRe);
+      if (tagMatch) {
+        rawNom = rawNom.replace(platTagRe, '').trim();
+        platGroup = { batch: tagMatch[2], nom: decodeURIComponent(tagMatch[3]) };
+      }
+
       const nomFallback = rawNom.replace(/\s*\(?\d+(?:[.,]\d+)?\s*g\)?\.?\s*$/i, '').trim() || rawNom;
       return {
         id:        pg.id,
@@ -2631,11 +2659,12 @@ async function loadLiniesApat(apatId) {
         fibra:     pp['Fibra (g)']?.number  || 0,
         qty:       pp['Quantitat (g)']?.number || 0,
         url:       'https://www.notion.so/' + pg.id.replace(/-/g, ''),
+        platGroup,
       };
     });
     if (!linies.length) { el.innerHTML = ''; return; }
-    linies.sort((a, b) => a.nom.localeCompare(b.nom, 'ca'));
-    el.innerHTML = linies.map(l => {
+
+    const liniaRowHtml = (l) => {
       const lid = l.id.replace(/-/g, '');
       return '<div style="display:flex;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'
       + '<input type="checkbox" class="linia-cb" data-id="' + l.id + '" style="display:none;flex-shrink:0;margin-right:8px;width:17px;height:17px;cursor:pointer;accent-color:var(--red)" onchange="updateSelCount(this.closest(\'.mg\'))">'
@@ -2655,6 +2684,42 @@ async function loadLiniesApat(apatId) {
       +   '</div>'
       + '</div>'
       + '</div>';
+    };
+
+    // Agrupa les línies que venen del mateix plat/recepta (mateix batch); la resta queden soltes
+    const soltes = linies.filter(l => !l.platGroup);
+    const grupsMap = {};
+    const grupsOrdre = [];
+    linies.filter(l => l.platGroup).forEach(l => {
+      const key = l.platGroup.batch;
+      if (!grupsMap[key]) { grupsMap[key] = { nom: l.platGroup.nom, items: [] }; grupsOrdre.push(key); }
+      grupsMap[key].items.push(l);
+    });
+
+    // Elements a nivell superior: línies soltes + grups, ordenats alfabèticament pel nom mostrat
+    const top = [
+      ...soltes.map(l => ({ tipus: 'linia', nom: l.nom, l })),
+      ...grupsOrdre.map(key => ({ tipus: 'grup', nom: grupsMap[key].nom, key })),
+    ];
+    top.sort((a, b) => a.nom.localeCompare(b.nom, 'ca'));
+
+    el.innerHTML = top.map(t => {
+      if (t.tipus === 'linia') return liniaRowHtml(t.l);
+      const items = grupsMap[t.key].items.slice().sort((a, b) => a.nom.localeCompare(b.nom, 'ca'));
+      const totalKcal = Math.round(items.reduce((s, l) => s + l.kcal, 0));
+      return '<div class="pg">'
+        + '<div class="pg-header" onclick="this.parentElement.classList.toggle(\'open\')">'
+        +   '<div class="pg-header-left">'
+        +     '<span>🍽️</span>'
+        +     '<span class="pg-nom">' + t.nom + '</span>'
+        +   '</div>'
+        +   '<div style="display:flex;align-items:center;gap:6px">'
+        +     '<span class="pg-kcal">' + totalKcal + ' kcal</span>'
+        +     '<span class="pg-chevron">▼</span>'
+        +   '</div>'
+        + '</div>'
+        + '<div class="pg-body">' + items.map(liniaRowHtml).join('') + '</div>'
+        + '</div>';
     }).join('');
   } catch(e) {
     if (el) el.innerHTML = '';
@@ -3625,6 +3690,9 @@ function confirmUsePlat(tipusApat) {
   document.getElementById('nl-input').value = plat.ingredients;
   document.getElementById('interp-results').style.display = 'none';
   items = [];
+
+  // Marca aquest lot perquè les línies que es desin quedin agrupades sota el nom del plat/recepta
+  _platBatchPendent = { id: plat.id, nom: plat.nom, batch: Date.now().toString(36) };
 
   const porcioTxt = _platPorcioFactor !== 1 ? ` · ració ×${_platPorcioFactor}` : '';
   toast(`🍽️ Ingredients de "${plat.nom}" carregats${porcioTxt}`);
