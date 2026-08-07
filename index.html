@@ -2707,7 +2707,8 @@ async function loadLiniesApat(apatId) {
       if (t.tipus === 'linia') return liniaRowHtml(t.l);
       const items = grupsMap[t.key].items.slice().sort((a, b) => a.nom.localeCompare(b.nom, 'ca'));
       const totalKcal = Math.round(items.reduce((s, l) => s + l.kcal, 0));
-      return '<div class="pg">'
+      const idsAttr = items.map(l => l.id).join(',');
+      return '<div class="pg" data-ids="' + idsAttr + '">'
         + '<div class="pg-header" onclick="this.parentElement.classList.toggle(\'open\')">'
         +   '<div class="pg-header-left">'
         +     '<span>🍽️</span>'
@@ -2715,6 +2716,7 @@ async function loadLiniesApat(apatId) {
         +   '</div>'
         +   '<div style="display:flex;align-items:center;gap:6px">'
         +     '<span class="pg-kcal">' + totalKcal + ' kcal</span>'
+        +     '<button onclick="event.stopPropagation();deletePlatGrup(this,\'' + elId + '\')" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--red);opacity:0.6;padding:2px 4px" title="Esborrar tot el plat">🗑</button>'
         +     '<span class="pg-chevron">▼</span>'
         +   '</div>'
         + '</div>'
@@ -2858,6 +2860,26 @@ async function deleteLinia(liniaId, parentElId) {
     const apatId = apatIdFlat.replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5');
     await loadLiniesApat(apatId);
     // Refresca totals
+    loadToday();
+  } catch(e) {
+    toast('❌ ' + e.message, 'err');
+  }
+}
+
+async function deletePlatGrup(btn, elId) {
+  const pg = btn.closest('.pg');
+  if (!pg) return;
+  const ids = (pg.dataset.ids || '').split(',').filter(Boolean);
+  const nom = pg.querySelector('.pg-nom')?.textContent || 'aquest plat';
+  if (!ids.length) return;
+  if (!confirm(`Esborrar tot "${nom}" (${ids.length} ingredient${ids.length > 1 ? 's' : ''}) de l'àpat?`)) return;
+  try {
+    pg.style.opacity = '0.4';
+    await Promise.all(ids.map(id => nArchive(id)));
+    toast(`🗑 "${nom}" esborrat (${ids.length} línies)`, 'ok');
+    const apatIdFlat = elId.replace('linies-', '');
+    const apatId = apatIdFlat.replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5');
+    await loadLiniesApat(apatId);
     loadToday();
   } catch(e) {
     toast('❌ ' + e.message, 'err');
