@@ -182,6 +182,18 @@
     .bar-bg { height:5px; background:rgba(255,255,255,.07); border-radius:3px; overflow:hidden; }
     .bar-fill { height:100%; border-radius:3px; transition:width .9s ease; }
 
+    /* ── MACROS MINI RINGS ── */
+    .mring-row { display:flex; justify-content:space-between; gap:4px; }
+    .mring-item { flex:1; display:flex; flex-direction:column; align-items:center; cursor:pointer; border-radius:10px; padding:6px 2px; transition:background .15s; }
+    .mring-item:hover { background:var(--border); }
+    .mring-wrap { position:relative; width:64px; height:64px; }
+    .mring-wrap svg { width:100%; height:100%; transform:rotate(-90deg); }
+    .mring-bg { fill:none; stroke:rgba(255,255,255,.07); stroke-width:6; }
+    .mring-prog { fill:none; stroke-width:6; stroke-linecap:round; stroke-dasharray:0 163.36; transition:stroke-dasharray .9s ease; }
+    .mring-val { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:14px; font-weight:800; line-height:1; }
+    .mring-name { display:flex; align-items:center; gap:4px; font-size:10.5px; color:var(--text); margin-top:7px; text-align:center; white-space:nowrap; }
+    .mring-obj { font-size:11px; color:var(--text); margin-top:2px; font-weight:600; }
+
     /* ── KCAL RING ── */
     .ring-wrap { position:relative; width:160px; height:160px; margin:0 auto 14px; }
     .ring-wrap svg { transform:rotate(-90deg); }
@@ -638,11 +650,6 @@
     </div>
   </div>
 
-  <!-- Àpats -->
-  <div id="today-entries">
-    <div class="empty"><div class="empty-icon">🍽️</div><div class="empty-txt">Prem "Actualitzar" per carregar els àpats d'avui</div></div>
-  </div>
-
   <!-- Macros -->
   <div class="card card-sh" id="card-today-macros" style="border-color:rgba(124,58,237,.22)">
     <div class="sh" style="background:#f5f3ff;border-bottom:1.5px solid rgba(124,58,237,.2)">
@@ -650,35 +657,58 @@
       <span class="sh-title" style="color:#4c1d95">Macronutrients</span>
     </div>
     <div class="card-body">
-      <div class="mbar" onclick="showMacroModal('prot')">
-        <div class="mbar-header">
-          <div class="mbar-name"><div class="mdot" style="background:var(--blue)"></div>Proteïna</div>
-          <div class="mbar-val"><b id="t-prot">—</b>g <span class="obj" id="t-prot-obj"></span></div>
+      <div class="mring-row">
+        <div class="mring-item" onclick="showMacroModal('carbs')">
+          <div class="mring-wrap">
+            <svg viewBox="0 0 64 64">
+              <circle class="mring-bg" cx="32" cy="32" r="26"/>
+              <circle class="mring-prog" id="ring-carbs" cx="32" cy="32" r="26" style="stroke:var(--green)"/>
+            </svg>
+            <div class="mring-val"><span id="t-carbs">—</span>g</div>
+          </div>
+          <div class="mring-name"><div class="mdot" style="background:var(--green)"></div>Carbohidrats</div>
+          <div class="mring-obj"><span id="t-carbs-obj">—</span>g</div>
         </div>
-        <div class="bar-bg"><div class="bar-fill" id="bar-prot" style="background:var(--blue);width:0%"></div></div>
-      </div>
-      <div class="mbar" onclick="showMacroModal('greix')">
-        <div class="mbar-header">
-          <div class="mbar-name"><div class="mdot" style="background:var(--yellow)"></div>Greix</div>
-          <div class="mbar-val"><b id="t-greix">—</b>g <span class="obj" id="t-greix-obj"></span></div>
+        <div class="mring-item" onclick="showMacroModal('prot')">
+          <div class="mring-wrap">
+            <svg viewBox="0 0 64 64">
+              <circle class="mring-bg" cx="32" cy="32" r="26"/>
+              <circle class="mring-prog" id="ring-prot" cx="32" cy="32" r="26" style="stroke:var(--blue)"/>
+            </svg>
+            <div class="mring-val"><span id="t-prot">—</span>g</div>
+          </div>
+          <div class="mring-name"><div class="mdot" style="background:var(--blue)"></div>Proteïna</div>
+          <div class="mring-obj"><span id="t-prot-obj">—</span>g</div>
         </div>
-        <div class="bar-bg"><div class="bar-fill" id="bar-greix" style="background:var(--yellow);width:0%"></div></div>
-      </div>
-      <div class="mbar" onclick="showMacroModal('carbs')">
-        <div class="mbar-header">
-          <div class="mbar-name"><div class="mdot" style="background:var(--green)"></div>Carbohidrats</div>
-          <div class="mbar-val"><b id="t-carbs">—</b>g <span class="obj" id="t-carbs-obj"></span></div>
+        <div class="mring-item" onclick="showMacroModal('greix')">
+          <div class="mring-wrap">
+            <svg viewBox="0 0 64 64">
+              <circle class="mring-bg" cx="32" cy="32" r="26"/>
+              <circle class="mring-prog" id="ring-greix" cx="32" cy="32" r="26" style="stroke:var(--yellow)"/>
+            </svg>
+            <div class="mring-val"><span id="t-greix">—</span>g</div>
+          </div>
+          <div class="mring-name"><div class="mdot" style="background:var(--yellow)"></div>Greix</div>
+          <div class="mring-obj"><span id="t-greix-obj">—</span>g</div>
         </div>
-        <div class="bar-bg"><div class="bar-fill" id="bar-carbs" style="background:var(--green);width:0%"></div></div>
-      </div>
-      <div class="mbar" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px" onclick="showMacroModal('fibra')">
-        <div class="mbar-header">
-          <div class="mbar-name"><div class="mdot" style="background:var(--purple)"></div>Fibra</div>
-          <div class="mbar-val"><b id="t-fibra">—</b>g <span class="obj" id="t-fibra-obj"></span></div>
+        <div class="mring-item" onclick="showMacroModal('fibra')">
+          <div class="mring-wrap">
+            <svg viewBox="0 0 64 64">
+              <circle class="mring-bg" cx="32" cy="32" r="26"/>
+              <circle class="mring-prog" id="ring-fibra" cx="32" cy="32" r="26" style="stroke:var(--purple)"/>
+            </svg>
+            <div class="mring-val"><span id="t-fibra">—</span>g</div>
+          </div>
+          <div class="mring-name"><div class="mdot" style="background:var(--purple)"></div>Fibra</div>
+          <div class="mring-obj"><span id="t-fibra-obj">—</span>g</div>
         </div>
-        <div class="bar-bg"><div class="bar-fill" id="bar-fibra" style="background:var(--purple);width:0%"></div></div>
       </div>
     </div>
+  </div>
+
+  <!-- Àpats -->
+  <div id="today-entries">
+    <div class="empty"><div class="empty-icon">🍽️</div><div class="empty-txt">Prem "Actualitzar" per carregar els àpats d'avui</div></div>
   </div>
 
   <!-- Exercici -->
@@ -2479,20 +2509,27 @@ async function loadToday() {
     updateKcalRing(totKcal, objKcal, ringEx); // ringEx already set by loadExercici
 
     document.getElementById('t-prot').textContent = rnd(totProt);
-    document.getElementById('t-prot-obj').textContent = `/ ${rnd(objProt,0)}g`;
+    document.getElementById('t-prot-obj').textContent = rnd(objProt,0);
     document.getElementById('t-greix').textContent = rnd(totGreix);
-    document.getElementById('t-greix-obj').textContent = `/ ${rnd(objGreix,0)}g`;
+    document.getElementById('t-greix-obj').textContent = rnd(objGreix,0);
     document.getElementById('t-carbs').textContent = rnd(totCarbs);
-    document.getElementById('t-carbs-obj').textContent = `/ ${rnd(objCarbs,0)}g`;
+    document.getElementById('t-carbs-obj').textContent = rnd(objCarbs,0);
     document.getElementById('t-fibra').textContent = rnd(totFibra);
-    document.getElementById('t-fibra-obj').textContent = `/ ${objFibra}g`;
+    document.getElementById('t-fibra-obj').textContent = objFibra;
 
     const setPct = (id, v, max) =>
       document.getElementById(id).style.width = Math.min(v / max * 100, 100) + '%';
-    setPct('bar-prot', totProt, objProt);
-    setPct('bar-greix', totGreix, objGreix);
-    setPct('bar-carbs', totCarbs, objCarbs);
-    setPct('bar-fibra', totFibra, objFibra);
+
+    // Anells petits de macros (Avui)
+    const mringCirc = 163.36; // 2 * PI * r(26)
+    const setRingPct = (id, v, max) => {
+      const el = document.getElementById(id);
+      if (el) el.style.strokeDasharray = `${Math.min(v / max * mringCirc, mringCirc)} ${mringCirc}`;
+    };
+    setRingPct('ring-prot', totProt, objProt);
+    setRingPct('ring-greix', totGreix, objGreix);
+    setRingPct('ring-carbs', totCarbs, objCarbs);
+    setRingPct('ring-fibra', totFibra, objFibra);
 
     // 4. Meal groups
     const icons = { Esmorzar:'☀️', Dinar:'🍽️', Berenar:'🍎', Sopar:'🌙' };
