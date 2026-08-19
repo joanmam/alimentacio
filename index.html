@@ -1804,6 +1804,14 @@ Text a analitzar: "${text}"`;
         fibra_g:     Math.round((it.fibra_g || 0) * f * 10) / 10,
       }));
     }
+    // Contrasta amb el catàleg d'Aliments de Notion: si un nom coincideix
+    // exactament es fan servir les dades reals; si només s'assembla, es
+    // proposen com a suggeriments (l'usuari decideix, no s'auto-fusiona res)
+    try {
+      await creuaAmbCatalegAliments();
+    } catch(e) {
+      console.warn('No s\'ha pogut consultar el catàleg d\'Aliments:', e.message);
+    }
     showItems();
   } catch(e) {
     toast('Error Claude: ' + e.message, 'err');
@@ -1813,17 +1821,140 @@ Text a analitzar: "${text}"`;
   }
 }
 
+// ── CATÀLEG D'ALIMENTS: cerca de coincidències ────────
+let _catalegAlimentsCache = null;
+
+async function getCatalegAliments(forceReload) {
+  if (_catalegAlimentsCache && !forceReload) return _catalegAlimentsCache;
+  const aliments = [];
+  let cursor;
+  do {
+    const body = { page_size: 100 };
+    if (cursor) body.start_cursor = cursor;
+    const res = await nCall(`/v1/databases/${DB_ALIMENTS}/query`, 'POST', body);
+    for (const pg of (res.results || [])) {
+      const p = pg.properties;
+      const nom = p['Nom']?.title?.[0]?.plain_text || '';
+      if (!nom) continue;
+      aliments.push({
+        id:    pg.id,
+        nom,
+        kcal:  p['kcal/100g']?.number  ?? 0,
+        prot:  p['Prot/100g']?.number  ?? 0,
+        greix: p['Greix/100g']?.number ?? 0,
+        carbs: p['Carbs/100g']?.number ?? 0,
+        fibra: p['Fibra/100g']?.number ?? 0,
+      });
+    }
+    cursor = res.next_cursor;
+  } while (cursor);
+  _catalegAlimentsCache = aliments;
+  return aliments;
+}
+
+// Llindar per proposar un aliment del catàleg com a "possible coincidència"
+// (per sota d'això no es mostra ni com a suggeriment, per evitar soroll)
+const LLINDAR_SUGGERIMENT = 0.34;
+
+function trobaCoincidenciesCataleg(nom, cataleg) {
+  const nomNorm = normalitzaNom(nom);
+  const exacte = cataleg.find(a => normalitzaNom(a.nom) === nomNorm);
+  if (exacte) return { exacte, candidats: [] };
+
+  const candidats = cataleg
+    .map(a => ({ a, sim: similitudNoms(nom, a.nom) }))
+    .filter(x => x.sim >= LLINDAR_SUGGERIMENT)
+    .sort((x, y) => y.sim - x.sim)
+    .slice(0, 4)
+    .map(x => x.a);
+  return { exacte: null, candidats };
+}
+
+// Aplica les dades reals d'un aliment del catàleg (per100 × quantitat) a un item
+function aplicaAlimentACataleg(it, alimentCataleg) {
+  const q = it.quantitat_g;
+  it.kcal          = Math.round(alimentCataleg.kcal  * q / 100);
+  it.proteina_g    = Math.round(alimentCataleg.prot  * q / 100 * 10) / 10;
+  it.greix_g       = Math.round(alimentCataleg.greix * q / 100 * 10) / 10;
+  it.carbs_g       = Math.round(alimentCataleg.carbs * q / 100 * 10) / 10;
+  it.fibra_g       = Math.round((alimentCataleg.fibra || 0) * q / 100 * 10) / 10;
+  it._alimentId    = alimentCataleg.id;
+  it._alimentNom   = alimentCataleg.nom;
+  it._origenMacros = 'notion';
+}
+
+// Creua els items acabats d'interpretar per Claude amb el catàleg de Notion.
+// Coincidència exacta de nom → s'aplica automàticament (sense ambigüitat).
+// Coincidència parcial → es guarda com a suggeriment perquè l'usuari triï.
+async function creuaAmbCatalegAliments() {
+  if (!cfg.notionToken) return; // sense token no es pot consultar Notion
+  const cataleg = await getCatalegAliments();
+  items = items.map(it => {
+    const nou = {
+      ...it,
+      _claudeOriginal: {
+        kcal: it.kcal, proteina_g: it.proteina_g, greix_g: it.greix_g,
+        carbs_g: it.carbs_g, fibra_g: it.fibra_g,
+      },
+      _alimentId: null, _alimentNom: null, _origenMacros: 'claude', _candidats: [],
+    };
+    const { exacte, candidats } = trobaCoincidenciesCataleg(it.nom, cataleg);
+    if (exacte) {
+      aplicaAlimentACataleg(nou, exacte);
+    } else {
+      nou._candidats = candidats;
+    }
+    return nou;
+  });
+}
+
+// L'usuari tria manualment un dels aliments suggerits del catàleg
+function seleccionaCandidatAliment(i, alimentId) {
+  const it = items[i];
+  const c = (it._candidats || []).find(x => x.id === alimentId);
+  if (!c) return;
+  aplicaAlimentACataleg(it, c);
+  showItems();
+}
+
+// L'usuari descarta els suggeriments i torna a l'estimació de Claude
+function deseleccionaCandidatAliment(i) {
+  const it = items[i];
+  if (it._claudeOriginal) Object.assign(it, it._claudeOriginal);
+  it._alimentId = null;
+  it._alimentNom = null;
+  it._origenMacros = 'claude';
+  showItems();
+}
+
 function showItems() {
   const list = document.getElementById('items-list');
   list.innerHTML = '';
   items.forEach((it, i) => {
     const el = document.createElement('div');
     el.className = 'item-row';
+
+    const origenTag = it._origenMacros === 'notion'
+      ? `<div style="font-size:11px;color:var(--green);margin-top:2px">📗 Dades reals de Notion${it._alimentNom ? ' — ' + it._alimentNom : ''}</div>`
+      : '';
+
+    const candidatsHtml = (it._candidats && it._candidats.length) ? `
+      <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+        <span style="font-size:11px;color:var(--text)">Al catàleg potser vols dir:</span>
+        ${it._candidats.map(c => `
+          <span onclick="seleccionaCandidatAliment(${i},'${c.id}')"
+            style="cursor:pointer;font-size:11px;padding:3px 9px;border-radius:20px;border:1.5px solid ${it._alimentId===c.id ? 'var(--accent)' : 'var(--border)'};${it._alimentId===c.id ? 'background:var(--accent);color:#fff' : ''}">${c.nom}</span>`).join('')}
+        ${it._alimentId ? `<span onclick="deseleccionaCandidatAliment(${i})"
+            style="cursor:pointer;font-size:11px;padding:3px 9px;border-radius:20px;border:1.5px dashed var(--border);color:var(--text)">✕ cap, usa l'estimació de Claude</span>` : ''}
+      </div>` : '';
+
     el.innerHTML = `
-      <span class="item-check">✅</span>
+      <span class="item-check">${it._origenMacros === 'notion' ? '📗' : '✅'}</span>
       <div class="item-info">
         <div class="item-name">${it.nom}</div>
         <div class="item-macros">${it.quantitat_g}g · ${it.kcal} kcal · ${it.proteina_g}g prot · ${it.greix_g}g greix · ${it.carbs_g}g carbs</div>
+        ${origenTag}
+        ${candidatsHtml}
       </div>
       <span class="item-del" onclick="removeItem(${i})">✕</span>`;
     list.appendChild(el);
@@ -2236,7 +2367,16 @@ async function saveText() {
         fibra: it.quantitat_g ? Math.round((it.fibra_g||0) / it.quantitat_g * 100 * 10) / 10 : 0,
       };
       toast(`Afegint ${it.nom}…`);
-      const { id: alimentId, per100: actualPer100 } = await ensureAliment(it.nom, per100);
+      // Si l'item ja està vinculat a un aliment del catàleg (coincidència exacta
+      // o triat manualment per l'usuari a la llista), es fa servir directament
+      // en lloc de tornar a buscar/crear — evita duplicats i respecta la tria de l'usuari
+      let alimentId, actualPer100;
+      if (it._alimentId) {
+        alimentId = it._alimentId;
+        actualPer100 = per100; // ja són els valors reals de Notion (aplicats a la llista)
+      } else {
+        ({ id: alimentId, per100: actualPer100 } = await ensureAliment(it.nom, per100));
+      }
       // Calcular macros a partir dels valors reals de la BD (no estimats per Claude)
       const qty = it.quantitat_g;
       const macros = {
