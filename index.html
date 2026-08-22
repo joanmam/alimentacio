@@ -1089,12 +1089,23 @@
     <p style="font-size:13px;color:var(--text);margin-bottom:14px;line-height:1.5">
       Fes la foto amb el <b>dit índex visible</b> al costat del plat (≈7 cm de referència de mida).
     </p>
-    <label for="foto-input" style="display:flex;align-items:center;justify-content:center;gap:8px;
-      width:100%;padding:13px;border-radius:12px;border:2px dashed var(--border);
-      background:var(--card);font-size:15px;font-weight:600;color:var(--accent);cursor:pointer">
-      📷 Fer foto / triar imatge
-    </label>
-    <input type="file" id="foto-input" accept="image/*" capture="environment"
+    <div style="display:flex;gap:8px">
+      <label for="foto-input-camera" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
+        padding:13px 8px;border-radius:12px;border:2px dashed var(--border);
+        background:var(--card);font-size:14px;font-weight:600;color:var(--accent);cursor:pointer">
+        📷 Fer foto
+      </label>
+      <label for="foto-input-galeria" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
+        padding:13px 8px;border-radius:12px;border:2px dashed var(--border);
+        background:var(--card);font-size:14px;font-weight:600;color:var(--accent);cursor:pointer">
+        🖼️ Galeria
+      </label>
+    </div>
+    <!-- capture="environment" obre directament la càmera; sense l'atribut el navegador
+         mostra el selector nadiu (que sol incloure galeria/fitxers) -->
+    <input type="file" id="foto-input-camera" accept="image/*" capture="environment"
+      style="display:none" onchange="fotoSeleccionada(this)">
+    <input type="file" id="foto-input-galeria" accept="image/*"
       style="display:none" onchange="fotoSeleccionada(this)">
     <div id="foto-preview" style="display:none;margin-top:12px;position:relative">
       <img id="foto-img" style="width:100%;border-radius:10px;max-height:260px;object-fit:cover">
@@ -1255,6 +1266,8 @@
       <label class="lbl">imgbb API Key (fotos 📸)</label>
       <input type="password" id="s-imgbb" placeholder="…" autocomplete="off">
       <div class="hint">Clau per pujar fotos de plats. Obté-la gratis a <a href="https://api.imgbb.com" target="_blank">api.imgbb.com</a> (registra't → API Key).</div>
+      <button type="button" class="btn btn-ghost" style="margin-top:8px" onclick="testImgbb()">🔌 Verificar connexió imgbb</button>
+      <div id="s-imgbb-status" style="font-size:12px;margin-top:6px"></div>
     </div>
 
     <div class="divider"></div>
@@ -1873,14 +1886,19 @@ function trobaCoincidenciesCataleg(nom, cataleg) {
 // Aplica les dades reals d'un aliment del catàleg (per100 × quantitat) a un item
 function aplicaAlimentACataleg(it, alimentCataleg) {
   const q = it.quantitat_g;
-  it.kcal          = Math.round(alimentCataleg.kcal  * q / 100);
-  it.proteina_g    = Math.round(alimentCataleg.prot  * q / 100 * 10) / 10;
-  it.greix_g       = Math.round(alimentCataleg.greix * q / 100 * 10) / 10;
-  it.carbs_g       = Math.round(alimentCataleg.carbs * q / 100 * 10) / 10;
-  it.fibra_g       = Math.round((alimentCataleg.fibra || 0) * q / 100 * 10) / 10;
+  const per100 = {
+    kcal: alimentCataleg.kcal, prot: alimentCataleg.prot, greix: alimentCataleg.greix,
+    carbs: alimentCataleg.carbs, fibra: alimentCataleg.fibra || 0,
+  };
+  it.kcal          = Math.round(per100.kcal  * q / 100);
+  it.proteina_g    = Math.round(per100.prot  * q / 100 * 10) / 10;
+  it.greix_g       = Math.round(per100.greix * q / 100 * 10) / 10;
+  it.carbs_g       = Math.round(per100.carbs * q / 100 * 10) / 10;
+  it.fibra_g       = Math.round(per100.fibra * q / 100 * 10) / 10;
   it._alimentId    = alimentCataleg.id;
   it._alimentNom   = alimentCataleg.nom;
   it._origenMacros = 'notion';
+  it._per100       = per100; // base per a recalcular si canvia la quantitat (pestanya Foto)
 }
 
 // Creua els items acabats d'interpretar per Claude amb el catàleg de Notion.
@@ -4715,12 +4733,12 @@ function fotoSeleccionada(input) {
   document.getElementById('foto-save-section').style.display = 'none';
   _fotoItems = [];
 
-  // Redimensiona a màx 1024px i converteix a base64
+  // Redimensiona a màx 1568px (mida òptima per a la visió de Claude) i converteix a base64
   const reader = new FileReader();
   reader.onload = ev => {
     const imgEl = new Image();
     imgEl.onload = () => {
-      const MAX = 1024;
+      const MAX = 1568;
       let w = imgEl.width, h = imgEl.height;
       if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
       if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
@@ -4743,13 +4761,19 @@ async function analitzarFoto() {
   btn.innerHTML = '<span class="spin"></span> Analitzant…';
   btn.disabled = true;
 
+  const nomPlat = document.getElementById('foto-nom-plat').value.trim();
   const pista = document.getElementById('foto-pista').value.trim();
-  const pistaText = pista ? `\nInformació addicional sobre el plat: ${pista}` : '';
-  const prompt = `Ets un expert en nutrició. Analitza aquesta foto d'un plat de menjar.
-El dit índex visible a la foto mesura aproximadament 7 cm i serveix com a referència de mida per estimar les quantitats.
-Identifica tots els aliments i ingredients visibles, estima les quantitats en grams usant el dit com a escala.
-Calcula els macronutrients per a les quantitats estimades usant valors nutricionals estàndard.${pistaText}
-Retorna ÚNICAMENT un JSON array sense cap explicació ni markdown.
+  const nomPlatText = nomPlat ? `\nL'usuari diu que el plat es diu: "${nomPlat}". Fes-ne servir aquest nom com a base i identifica'n els ingredients típics, contrastant-ho amb el que veus a la foto.` : '';
+  const pistaText   = pista   ? `\nInformació addicional sobre el plat: ${pista}` : '';
+  const prompt = `Ets un expert en nutrició i cuina catalana/mediterrània. Analitza aquesta foto d'un plat de menjar amb cura.
+
+Procés a seguir:
+1. Primer identifica de quin plat es tracta en conjunt (si és un plat compost reconeixible, com paella, amanida, entrepà, etc.) i quins ingredients principals hi ha visibles.
+2. Per cada ingredient o aliment diferenciat, estima'n la quantitat en grams. El dit índex visible a la foto mesura aproximadament 7 cm: fes servir aquesta referència comparant la mida de cada porció amb la del dit (llargada, amplada i gruix/profunditat, no només la superfície visible al plat).
+3. Si dos aliments es poden confondre visualment (p. ex. tipus d'oli, salses, formatges o carns similars), tria l'opció més probable segons el context del plat i indica-la pel seu nom habitual (evita noms genèrics com "carn" o "salsa" si es pot concretar).
+4. Calcula els macronutrients (kcal, proteïna, greix, carbohidrats, fibra) per a cada quantitat estimada usant valors nutricionals estàndard per 100g.${nomPlatText}${pistaText}
+
+Retorna ÚNICAMENT un JSON array sense cap explicació ni format markdown, un objecte per cada ingredient/aliment diferenciat (no agrupis tot el plat en un sol ítem tret que sigui un producte envasat/homogeni).
 Format: [{"nom":"string","quantitat_g":number,"kcal":number,"proteina_g":number,"greix_g":number,"carbs_g":number,"fibra_g":number}]`;
 
   try {
@@ -4763,7 +4787,7 @@ Format: [{"nom":"string","quantitat_g":number,"kcal":number,"proteina_g":number,
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 1024,
+        max_tokens: 2048,
         messages: [{
           role: 'user',
           content: [
@@ -4777,6 +4801,25 @@ Format: [{"nom":"string","quantitat_g":number,"kcal":number,"proteina_g":number,
     const d = await r.json();
     let raw = d.content[0].text.trim().replace(/```(?:json)?\n?/g,'').replace(/\n?```/g,'');
     _fotoItems = JSON.parse(raw);
+    // Guarda el per100 base estimat per Claude (permet recalcular en canviar
+    // la quantitat, i tornar-hi si l'usuari descarta un suggeriment de Notion)
+    _fotoItems = _fotoItems.map(it => {
+      const per100 = {
+        kcal:  it.quantitat_g ? it.kcal / it.quantitat_g * 100 : it.kcal,
+        prot:  it.quantitat_g ? it.proteina_g / it.quantitat_g * 100 : it.proteina_g,
+        greix: it.quantitat_g ? it.greix_g / it.quantitat_g * 100 : it.greix_g,
+        carbs: it.quantitat_g ? it.carbs_g / it.quantitat_g * 100 : it.carbs_g,
+        fibra: it.quantitat_g ? (it.fibra_g || 0) / it.quantitat_g * 100 : (it.fibra_g || 0),
+      };
+      return { ...it, _per100: per100, _claudePer100: per100 };
+    });
+    // Creua amb el catàleg d'Aliments de Notion: coincidència exacta → dades reals
+    // automàticament; coincidència parcial → es proposa com a suggeriment
+    try {
+      await creuaFotoAmbCatalegAliments();
+    } catch(e) {
+      console.warn('No s\'ha pogut consultar el catàleg d\'Aliments:', e.message);
+    }
     mostrarFotoResultats();
   } catch(e) {
     toast('Error Claude: ' + e.message, 'err');
@@ -4784,6 +4827,43 @@ Format: [{"nom":"string","quantitat_g":number,"kcal":number,"proteina_g":number,
     btn.innerHTML = '🧠 Analitzar amb Claude';
     btn.disabled = false;
   }
+}
+
+// Creua els ingredients detectats a la foto amb el catàleg d'Aliments de Notion
+// (mateixa lògica que a la pestanya Text — vegeu creuaAmbCatalegAliments)
+async function creuaFotoAmbCatalegAliments() {
+  if (!cfg.notionToken) return;
+  const cataleg = await getCatalegAliments();
+  _fotoItems = _fotoItems.map(it => {
+    const nou = { ...it, _alimentId: null, _alimentNom: null, _origenMacros: 'claude', _candidats: [] };
+    const { exacte, candidats } = trobaCoincidenciesCataleg(it.nom, cataleg);
+    if (exacte) {
+      aplicaAlimentACataleg(nou, exacte);
+    } else {
+      nou._candidats = candidats;
+    }
+    return nou;
+  });
+}
+
+function seleccionaCandidatFoto(idx, alimentId) {
+  const it = _fotoItems[idx];
+  const c = (it._candidats || []).find(x => x.id === alimentId);
+  if (!c) return;
+  aplicaAlimentACataleg(it, c);
+  mostrarFotoResultats();
+}
+
+// Descarta el suggeriment i torna al per100 estimat originalment per Claude
+// (recalculat sobre la quantitat actual, per si l'usuari ja l'havia canviat)
+function deseleccionaCandidatFoto(idx) {
+  const it = _fotoItems[idx];
+  it._per100 = it._claudePer100 || it._per100;
+  it._alimentId = null;
+  it._alimentNom = null;
+  it._origenMacros = 'claude';
+  recalcFotoItem(idx, it.quantitat_g);
+  mostrarFotoResultats();
 }
 
 function mostrarFotoResultats() {
@@ -4796,16 +4876,31 @@ function mostrarFotoResultats() {
   let html = '<div class="card">'
     + '<div class="card-title" style="margin-bottom:10px">Aliments detectats · <b>' + Math.round(totalKcal) + ' kcal</b></div>';
   _fotoItems.forEach((it, idx) => {
+    const origenTag = it._origenMacros === 'notion'
+      ? '<div style="font-size:11px;color:var(--green);margin-top:2px">📗 Dades reals de Notion' + (it._alimentNom ? ' — ' + it._alimentNom : '') + '</div>'
+      : '';
+    const candidatsHtml = (it._candidats && it._candidats.length) ? (
+      '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">'
+      + '<span style="font-size:11px;color:var(--text)">Al catàleg potser vols dir:</span>'
+      + it._candidats.map(c =>
+          '<span onclick="seleccionaCandidatFoto(' + idx + ',\'' + c.id + '\')" '
+          + 'style="cursor:pointer;font-size:11px;padding:3px 9px;border-radius:20px;border:1.5px solid ' + (it._alimentId===c.id ? 'var(--accent)' : 'var(--border)') + ';' + (it._alimentId===c.id ? 'background:var(--accent);color:#fff' : '') + '">' + c.nom + '</span>'
+        ).join('')
+      + (it._alimentId ? '<span onclick="deseleccionaCandidatFoto(' + idx + ')" style="cursor:pointer;font-size:11px;padding:3px 9px;border-radius:20px;border:1.5px dashed var(--border);color:var(--text)">✕ cap, usa l\'estimació de Claude</span>' : '')
+      + '</div>'
+    ) : '';
     html += '<div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">'
       + '<div>'
-      +   '<div style="font-size:14px;font-weight:700">' + it.nom + '</div>'
+      +   '<div style="font-size:14px;font-weight:700">' + (it._origenMacros === 'notion' ? '📗 ' : '') + it.nom + '</div>'
       +   '<div style="font-size:11px;color:var(--text);margin-top:2px">'
       +     '<input type="number" value="' + Math.round(it.quantitat_g) + '" min="1" max="2000" '
-      +     'onchange="_fotoItems[' + idx + '].quantitat_g=+this.value;recalcFotoItem(' + idx + ',this.value)" '
+      +     'onchange="recalcFotoItem(' + idx + ',this.value)" '
       +     'style="width:52px;font-size:12px;padding:2px 5px;border:1.5px solid var(--blue);border-radius:6px;text-align:center">g'
       +     ' · <span id="foto-kcal-' + idx + '">' + Math.round(it.kcal) + '</span> kcal'
       +     ' · P:' + it.proteina_g + 'g G:' + it.greix_g + 'g C:' + it.carbs_g + 'g'
       +   '</div>'
+      +   origenTag
+      +   candidatsHtml
       + '</div>'
       + '<button onclick="_fotoItems.splice(' + idx + ',1);mostrarFotoResultats()" '
       +   'style="background:none;border:none;color:var(--red);opacity:0.6;font-size:16px;cursor:pointer">🗑</button>'
@@ -4816,21 +4911,21 @@ function mostrarFotoResultats() {
   document.getElementById('foto-save-section').style.display = 'block';
 }
 
+// Recalcula les macros a partir del per100 vigent (el de Claude, o el de Notion
+// si l'item està vinculat a un aliment del catàleg) — sempre coherent encara
+// que la quantitat es canviï diverses vegades o es triï/descarti un candidat
 function recalcFotoItem(idx, newQty) {
   const it = _fotoItems[idx];
-  const oldQty = it._origQty || it.quantitat_g;
-  if (!it._origKcal) {
-    it._origKcal = it.kcal; it._origProt = it.proteina_g;
-    it._origGreix = it.greix_g; it._origCarbs = it.carbs_g;
-    it._origFibra = it.fibra_g || 0; it._origQty = oldQty;
+  const q = +newQty;
+  it.quantitat_g = q;
+  const p = it._per100;
+  if (p) {
+    it.kcal       = Math.round(p.kcal  * q / 100);
+    it.proteina_g = Math.round(p.prot  * q / 100 * 10) / 10;
+    it.greix_g    = Math.round(p.greix * q / 100 * 10) / 10;
+    it.carbs_g    = Math.round(p.carbs * q / 100 * 10) / 10;
+    it.fibra_g    = Math.round((p.fibra || 0) * q / 100 * 10) / 10;
   }
-  const f = newQty / it._origQty;
-  it.quantitat_g  = +newQty;
-  it.kcal         = Math.round(it._origKcal  * f);
-  it.proteina_g   = Math.round(it._origProt  * f * 10) / 10;
-  it.greix_g      = Math.round(it._origGreix * f * 10) / 10;
-  it.carbs_g      = Math.round(it._origCarbs * f * 10) / 10;
-  it.fibra_g      = Math.round(it._origFibra * f * 10) / 10;
   const el = document.getElementById('foto-kcal-' + idx);
   if (el) el.textContent = it.kcal;
 }
@@ -4855,7 +4950,14 @@ async function saveFoto() {
         carbs: Math.round(it.carbs_g * 100 / it.quantitat_g * 10) / 10,
         fibra: Math.round((it.fibra_g||0) * 100 / it.quantitat_g * 10) / 10,
       };
-      const { id: alimentId } = await ensureAliment(it.nom, per100);
+      // Si l'item ja està vinculat a un aliment del catàleg (coincidència exacta
+      // o triat per l'usuari a la llista de resultats), es fa servir directament
+      let alimentId;
+      if (it._alimentId) {
+        alimentId = it._alimentId;
+      } else {
+        ({ id: alimentId } = await ensureAliment(it.nom, per100));
+      }
       await createLinia(apatId, alimentId, `${it.nom} ${it.quantitat_g}g`, it.quantitat_g, macros);
     }
     // Intenta pujar la foto a PostImage i desar la URL al Resum Diari
@@ -4904,28 +5006,75 @@ async function saveFoto() {
   }
 }
 
-async function uploadToPostimage(base64, mime) {
+async function uploadToPostimage(base64, mime, expirationSec) {
   // Usa imgbb.com directament des del navegador (no cal worker)
   const key = cfg.imgbbKey;
-  if (!key) throw new Error('Cal configurar la imgbb API Key a ⚙️ Settings');
+  if (!key) throw new Error('Cal configurar la imgbb API Key a ⚙️ Configuració');
 
+  // La clau es passa tant per query string com per FormData (alguns clients
+  // d'imgbb només la reconeixen d'una de les dues maneres)
   const fd = new FormData();
   fd.append('key', key);
   fd.append('image', base64);  // base64 sense prefix data:
   fd.append('name', 'plat_' + Date.now());
+  if (expirationSec) fd.append('expiration', String(expirationSec));
 
-  const r = await fetch('https://api.imgbb.com/1/upload', {
-    method: 'POST',
-    body: fd,
-  });
-  const data = await r.json();
-  if (!data.success) throw new Error('imgbb: ' + JSON.stringify(data.error || data).slice(0,120));
+  let r;
+  try {
+    r = await fetch('https://api.imgbb.com/1/upload?key=' + encodeURIComponent(key), {
+      method: 'POST',
+      body: fd,
+    });
+  } catch(netErr) {
+    // Sol passar per falta de xarxa o bloqueig del navegador (p.ex. un
+    // adblocker/extensió de privadesa bloquejant api.imgbb.com)
+    throw new Error(`No s'ha pogut contactar amb imgbb (xarxa/CORS): ${netErr.message}`);
+  }
+
+  let data;
+  try {
+    data = await r.json();
+  } catch(_) {
+    throw new Error(`Resposta no vàlida d'imgbb (HTTP ${r.status})`);
+  }
+
+  if (!r.ok || !data.success) {
+    const msg = data?.error?.message || data?.status_txt || JSON.stringify(data).slice(0, 160);
+    if (r.status === 400 || /key/i.test(msg)) {
+      throw new Error(`Clau imgbb invàlida o caducada (HTTP ${r.status}): ${msg}`);
+    }
+    throw new Error(`imgbb HTTP ${r.status}: ${msg}`);
+  }
   return data.data.url;
+}
+
+// 1×1 px PNG transparent, per a la prova de connexió (no cal foto real)
+const _PIXEL_TEST_PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+
+async function testImgbb() {
+  const keyInput = document.getElementById('s-imgbb').value.trim();
+  const statusEl = document.getElementById('s-imgbb-status');
+  if (!keyInput) { toast('⚠️ Introdueix la imgbb API Key primer', 'err'); return; }
+  cfg.imgbbKey = keyInput; // fer servir el valor del camp encara no desat
+  statusEl.textContent = '🔌 Verificant…';
+  statusEl.style.color = 'var(--text)';
+  try {
+    // expiration:60 → imgbb esborra la imatge de prova al cap d'1 minut
+    const url = await uploadToPostimage(_PIXEL_TEST_PNG, 'image/png', 60);
+    statusEl.textContent = '✅ Connexió OK — clau vàlida';
+    statusEl.style.color = 'var(--green)';
+    toast('✅ imgbb: connexió correcta', 'ok');
+  } catch(e) {
+    statusEl.textContent = '❌ ' + e.message;
+    statusEl.style.color = 'var(--red)';
+    toast('❌ imgbb: ' + e.message, 'err');
+  }
 }
 
 function resetFoto() {
   _fotoItems = []; _fotoBase64 = null;
-  document.getElementById('foto-input').value = '';
+  document.getElementById('foto-input-camera').value = '';
+  document.getElementById('foto-input-galeria').value = '';
   document.getElementById('foto-pista').value = '';
   document.getElementById('foto-nom-plat').value = '';
   document.getElementById('foto-preview').style.display = 'none';
